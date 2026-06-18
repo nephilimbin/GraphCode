@@ -1,0 +1,56 @@
+# 源码(只打包编译后的 dist/)
+src/
+**/*.ts
+**/*.tsx
+
+# Source maps
+**/*.map
+dist/**/*.map
+
+# 测试
+test/
+tests/
+**/*.test.ts
+**/*.spec.ts
+**/*.test.js
+**/*.spec.js
+
+# 开发依赖(esbuild 把 web-tree-sitter 设为 external,运行时需要保留该包)
+node_modules/**
+!node_modules/web-tree-sitter/**
+
+# 开发配置
+tsconfig*.json
+.eslintrc*
+.prettierrc*
+.npmrc
+.yarnrc*
+.pnpmignore
+
+# 构建脚本
+esbuild.js
+scripts/
+
+# Git
+.git/
+.github/
+.gitignore
+
+# VS Code
+.vscode/
+.vscode-test/
+
+# 开发工具目录
+.claude/
+.scratch/
+docs/
+
+# 开发临时文件
+*.log
+*.tgz
+.DS_Store
+Thumbs.db
+
+# 保留运行时需要的 WASM 和查询文件
+!extension/dist/wasm/**
+!extension/dist/queries/**

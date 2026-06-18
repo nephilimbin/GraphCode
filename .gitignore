@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.log
+release/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+*.vsix
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary
+*.tmp
+*.temp
+test/
+tests/
+
+# Agent
+.claude/
+.scratch/
+CLAUDE.md

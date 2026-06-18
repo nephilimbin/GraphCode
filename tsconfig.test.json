@@ -1,0 +1,7 @@
+{
+  "//": "This is a meta tsconfig that references the per-area test tsconfigs",
+  "references": [
+    { "path": "./tsconfig.test.node.json" },
+    { "path": "./tsconfig.test.webview.json" }
+  ]
+}
