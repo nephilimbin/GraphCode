@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Node, Parser } from "web-tree-sitter";
-import { normalizePath } from '../../shared/path';
+import { normalizePath } from '../path';
 import { FileReader } from '../FileReader';
 import { ISymbolAnalyzer, SpiderError, SymbolDependency, SymbolInfo } from '../types';
 import { WasmParserFactory } from './WasmParserFactory';

@@ -15,7 +15,7 @@
  * Architecture: Pure Node.js, no VS Code dependencies
  */
 
-import { normalizePath } from "@/shared/path";
+import { normalizePath } from "./path";
 import type { CallEdge, CycleType, IntraFileGraph, SymbolNode } from "@/shared/types";
 
 /**

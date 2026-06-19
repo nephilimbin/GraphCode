@@ -1,4 +1,4 @@
-export { normalizePath, normalizePathForComparison } from "../shared/path";
+export { normalizePath, normalizePathForComparison } from "./path";
 
 /**
  * Error codes for Spider analysis errors

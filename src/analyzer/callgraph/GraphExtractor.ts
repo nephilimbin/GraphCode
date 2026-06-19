@@ -25,7 +25,7 @@
 import { WasmParserFactory } from "@/analyzer/languages/WasmParserFactory";
 import type { RelationType, SupportedLang, SymbolType } from "@/shared/callgraph-types";
 import { getLogger } from "@/shared/logger";
-import { normalizePath } from "@/shared/path";
+import { normalizePath } from "../path";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Node as TreeNode } from "web-tree-sitter";
