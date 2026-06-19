@@ -19,7 +19,7 @@ import type {
   SerializedCompoundNode,
   SupportedLang,
   SymbolType,
-} from "@/shared/callgraph-types";
+} from "../callgraph-types";
 import type { Database } from "sql.js";
 
 // ---------------------------------------------------------------------------

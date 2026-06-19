@@ -13,7 +13,7 @@
  * SCHEMA: specs/001-live-call-graph/contracts/db-schema.sql
  */
 
-import type { RelationType, SupportedLang, SymbolType } from "@/shared/callgraph-types";
+import type { RelationType, SupportedLang, SymbolType } from "../callgraph-types";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Database, SqlJsStatic } from "sql.js";

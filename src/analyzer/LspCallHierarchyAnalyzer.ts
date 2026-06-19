@@ -16,7 +16,7 @@
  */
 
 import { normalizePath } from "./path";
-import type { CallEdge, CycleType, IntraFileGraph, SymbolNode } from "@/shared/types";
+import type { CallEdge, CycleType, IntraFileGraph, SymbolNode } from "./types";
 
 /**
  * LSP Symbol Information (subset of vscode.SymbolInformation)

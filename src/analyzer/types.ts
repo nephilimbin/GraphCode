@@ -292,3 +292,44 @@ export interface ISymbolAnalyzer {
    */
   getSymbolDependencies(filePath: string): Promise<SymbolDependency[]>;
 }
+
+// ---------------------------------------------------------------------------
+// Symbol graph types (self-owned; mirrors src/foundation/types/symbol-types.ts).
+// NOTE: SymbolInfo/SymbolDependency above are the analyzer's OWN definitions
+// (different fields from foundation's) and are intentionally NOT replaced.
+// ---------------------------------------------------------------------------
+
+export interface SymbolNode {
+  id: string;
+  name: string;
+  originalName?: string;
+  kind: number;
+  type: "class" | "function" | "variable";
+  range: { start: number; end: number };
+  isExported: boolean;
+  isExternal: boolean;
+  parentSymbolId?: string;
+}
+
+export interface CallEdge {
+  source: string;
+  target: string;
+  relation: "calls" | "references";
+  direction?: "outgoing" | "incoming";
+  line: number;
+}
+
+export type CycleType =
+  | "self-recursive"
+  | "mutual-recursive"
+  | "complex";
+
+export interface IntraFileGraph {
+  filePath: string;
+  nodes: SymbolNode[];
+  edges: CallEdge[];
+  incomingEdges?: CallEdge[];
+  hasCycle: boolean;
+  cycleNodes?: string[];
+  cycleType?: CycleType;
+}

@@ -23,7 +23,7 @@
  */
 
 import { WasmParserFactory } from "@/analyzer/languages/WasmParserFactory";
-import type { RelationType, SupportedLang, SymbolType } from "@/shared/callgraph-types";
+import type { RelationType, SupportedLang, SymbolType } from "../callgraph-types";
 import { getLogger } from "../logger";
 import { normalizePath } from "../path";
 import fs from "node:fs/promises";
