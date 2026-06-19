@@ -6,8 +6,8 @@ import {
   type ClassDeclaration,
   type VariableStatement,
 } from "ts-morph";
-import { FileReader } from "./source/FileReader";
-import { ISymbolAnalyzer, SymbolDependency, SymbolInfo } from "./foundation/types";
+import { FileReader } from "../source/FileReader";
+import { ISymbolAnalyzer, SymbolDependency, SymbolInfo } from "../foundation/types";
 
 /** Map ts-morph kind names to category */
 function getCategory(
@@ -35,7 +35,7 @@ function getCategory(
   }
 }
 
-import { getLogger } from "./foundation/logger"
+import { getLogger } from "../foundation/logger"
 
 const log = getLogger("SymbolAnalyzer");
 
@@ -468,7 +468,7 @@ export class SymbolAnalyzer implements ISymbolAnalyzer {
       const moduleSpecifier = importDecl.getModuleSpecifierValue();
       const isTypeOnly = importDecl.isTypeOnly();
 
-      // Handle default imports: import Foo from './foo'
+      // Handle default imports: import Foo from '../foo'
       const defaultImport = importDecl.getDefaultImport();
       if (defaultImport) {
         const localName = defaultImport.getText();
@@ -479,7 +479,7 @@ export class SymbolAnalyzer implements ISymbolAnalyzer {
         });
       }
 
-      // Handle named imports: import { foo, bar as baz } from './module'
+      // Handle named imports: import { foo, bar as baz } from '../module'
       const namedImports = importDecl.getNamedImports();
       for (const namedImport of namedImports) {
         // For 'bar as baz':
@@ -500,7 +500,7 @@ export class SymbolAnalyzer implements ISymbolAnalyzer {
         });
       }
 
-      // Handle namespace imports: import * as Utils from './utils'
+      // Handle namespace imports: import * as Utils from '../utils'
       const namespaceImport = importDecl.getNamespaceImport();
       if (namespaceImport) {
         const localName = namespaceImport.getText();

@@ -1,6 +1,6 @@
 import path from "node:path";
-import { Parser } from "../Parser";
-import { SymbolAnalyzer } from "../SymbolAnalyzer";
+import { Parser } from "../languages/Parser";
+import { SymbolAnalyzer } from "../languages/SymbolAnalyzer";
 import { CSharpParser } from "../languages/CSharpParser";
 import { GoParser } from "../languages/GoParser";
 import { JavaParser } from "../languages/JavaParser";

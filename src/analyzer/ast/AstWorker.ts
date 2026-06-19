@@ -43,7 +43,7 @@ import { getLogger } from '../foundation/logger';
 import { detectLanguageFromExtension } from '../foundation/languageDetection';
 import type { SignatureInfo } from '../symbol/SignatureAnalyzer';
 import { SignatureAnalyzer } from '../symbol/SignatureAnalyzer';
-import { SymbolAnalyzer } from '../SymbolAnalyzer';
+import { SymbolAnalyzer } from '../languages/SymbolAnalyzer';
 import { PythonSymbolAnalyzer } from '../languages/PythonSymbolAnalyzer';
 import { RustSymbolAnalyzer } from '../languages/RustSymbolAnalyzer';
 import { SwiftSymbolAnalyzer } from '../languages/SwiftSymbolAnalyzer';

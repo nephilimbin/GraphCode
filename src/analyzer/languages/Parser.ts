@@ -1,7 +1,7 @@
-import { FileReader } from "./source/FileReader";
-import { Dependency, ILanguageAnalyzer, ParsedImport } from "./foundation/types";
-import { extractFilePath } from "./utils/PathExtractor";
-import { PathResolver } from "./utils/PathResolver";
+import { FileReader } from "../source/FileReader";
+import { Dependency, ILanguageAnalyzer, ParsedImport } from "../foundation/types";
+import { extractFilePath } from "../utils/PathExtractor";
+import { PathResolver } from "../utils/PathResolver";
 
 /**
  * Parses import/require/export statements from TypeScript/JavaScript files
