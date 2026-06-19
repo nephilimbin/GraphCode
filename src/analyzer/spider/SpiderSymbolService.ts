@@ -3,9 +3,9 @@ import { SUPPORTED_SYMBOL_ANALYSIS_EXTENSIONS } from '../foundation/constants';
 import { getLogger } from "../foundation/logger"
 import { AstWorkerHost } from '../ast/AstWorkerHost';
 import { Cache } from '../indexing/Cache';
-import { FileReader } from '../FileReader';
-import { LanguageService } from '../LanguageService';
-import { SourceFileCollector } from '../SourceFileCollector';
+import { FileReader } from '../source/FileReader';
+import { LanguageService } from '../source/LanguageService';
+import { SourceFileCollector } from '../source/SourceFileCollector';
 import { SymbolDependencyHelper } from '../symbol/SymbolDependencyHelper';
 import type { Dependency, SpiderConfig, SymbolDependency, SymbolInfo } from '../foundation/types';
 import { SpiderError, SpiderErrorCode, normalizePath } from '../foundation/types';

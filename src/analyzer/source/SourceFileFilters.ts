@@ -1,4 +1,4 @@
-import { SUPPORTED_FILE_EXTENSIONS, IGNORED_DIRECTORIES } from './foundation/constants';
+import { SUPPORTED_FILE_EXTENSIONS, IGNORED_DIRECTORIES } from '../foundation/constants';
 
 const ALWAYS_SKIPPED_DIRECTORIES = new Set(IGNORED_DIRECTORIES.filter(dir => dir !== 'node_modules'));
 

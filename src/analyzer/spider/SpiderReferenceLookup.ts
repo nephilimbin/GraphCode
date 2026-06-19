@@ -1,5 +1,5 @@
-import { FileReader } from '../FileReader';
-import { ReferencingFilesFinder } from '../ReferencingFilesFinder';
+import { FileReader } from '../source/FileReader';
+import { ReferencingFilesFinder } from '../source/ReferencingFilesFinder';
 import { ReverseIndexManager } from '../indexing/ReverseIndexManager';
 import type { Dependency } from '../foundation/types';
 import { normalizePath } from '../foundation/types';

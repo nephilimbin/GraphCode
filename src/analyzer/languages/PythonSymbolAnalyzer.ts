@@ -1,6 +1,6 @@
 import { Node, Parser } from "web-tree-sitter";
 import { normalizePath } from '../foundation/path';
-import { FileReader } from '../FileReader';
+import { FileReader } from '../source/FileReader';
 import { ISymbolAnalyzer, SpiderError, SymbolDependency, SymbolInfo } from '../foundation/types';
 import { WasmParserFactory } from './WasmParserFactory';
 import { resolveWasmFile } from '../foundation/wasmResolver';

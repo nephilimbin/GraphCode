@@ -32,7 +32,7 @@ export type { ExtractorConfig, ExtractionResult } from "./callgraph/GraphExtract
 export { detectCycleEdges } from "./callgraph/cycleUtils";
 
 // 收集与分析器
-export { SourceFileCollector } from "./SourceFileCollector";
+export { SourceFileCollector } from "./source/SourceFileCollector";
 export { LspCallHierarchyAnalyzer } from "./LspCallHierarchyAnalyzer";
 
 // 索引状态(类型)

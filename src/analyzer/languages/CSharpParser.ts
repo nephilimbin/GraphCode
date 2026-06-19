@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { Node, Parser } from "web-tree-sitter";
 import { normalizePath } from "../foundation/path";
-import { FileReader } from "../FileReader";
+import { FileReader } from "../source/FileReader";
 import { Dependency, ILanguageAnalyzer, SpiderError } from "../foundation/types";
 import { extractFilePath } from "../utils/PathExtractor";
 import { WasmParserFactory } from "./WasmParserFactory";

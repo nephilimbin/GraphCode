@@ -2,7 +2,7 @@ import { getLogger } from "../foundation/logger"
 import { Cache } from '../indexing/Cache';
 import { IndexerStatus } from '../indexing/IndexerStatus';
 import { ReverseIndexManager } from '../indexing/ReverseIndexManager';
-import { SourceFileCollector } from '../SourceFileCollector';
+import { SourceFileCollector } from '../source/SourceFileCollector';
 import type { Dependency, IndexingProgressCallback, SpiderConfig, SymbolDependency, SymbolInfo } from '../foundation/types';
 import { normalizePath, SpiderError } from '../foundation/types';
 import { YIELD_INTERVAL_MS } from '../utils/EventLoopYield';

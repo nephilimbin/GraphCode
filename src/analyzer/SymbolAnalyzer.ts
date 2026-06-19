@@ -6,7 +6,7 @@ import {
   type ClassDeclaration,
   type VariableStatement,
 } from "ts-morph";
-import { FileReader } from "./FileReader";
+import { FileReader } from "./source/FileReader";
 import { ISymbolAnalyzer, SymbolDependency, SymbolInfo } from "./foundation/types";
 
 /** Map ts-morph kind names to category */

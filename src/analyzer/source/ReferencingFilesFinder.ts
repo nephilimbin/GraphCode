@@ -1,6 +1,6 @@
 import { SourceFileCollector } from './SourceFileCollector';
-import { getLogger } from "./foundation/logger"
-import { Dependency, normalizePath } from './foundation/types';
+import { getLogger } from "../foundation/logger"
+import { Dependency, normalizePath } from '../foundation/types';
 
 const log = getLogger('ReferencingFilesFinder');
 

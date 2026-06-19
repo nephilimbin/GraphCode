@@ -1,17 +1,17 @@
 import path from "node:path";
-import { Parser } from "./Parser";
-import { SymbolAnalyzer } from "./SymbolAnalyzer";
-import { CSharpParser } from "./languages/CSharpParser";
-import { GoParser } from "./languages/GoParser";
-import { JavaParser } from "./languages/JavaParser";
-import { PythonParser } from "./languages/PythonParser";
-import { PythonSymbolAnalyzer } from "./languages/PythonSymbolAnalyzer";
-import { RustParser } from "./languages/RustParser";
-import { RustSymbolAnalyzer } from "./languages/RustSymbolAnalyzer";
-import { SwiftParser } from "./languages/SwiftParser";
-import { SwiftSymbolAnalyzer } from "./languages/SwiftSymbolAnalyzer";
-import { ILanguageAnalyzer, ISymbolAnalyzer } from "./foundation/types";
-import { extractFilePath } from "./utils/PathExtractor";
+import { Parser } from "../Parser";
+import { SymbolAnalyzer } from "../SymbolAnalyzer";
+import { CSharpParser } from "../languages/CSharpParser";
+import { GoParser } from "../languages/GoParser";
+import { JavaParser } from "../languages/JavaParser";
+import { PythonParser } from "../languages/PythonParser";
+import { PythonSymbolAnalyzer } from "../languages/PythonSymbolAnalyzer";
+import { RustParser } from "../languages/RustParser";
+import { RustSymbolAnalyzer } from "../languages/RustSymbolAnalyzer";
+import { SwiftParser } from "../languages/SwiftParser";
+import { SwiftSymbolAnalyzer } from "../languages/SwiftSymbolAnalyzer";
+import { ILanguageAnalyzer, ISymbolAnalyzer } from "../foundation/types";
+import { extractFilePath } from "../utils/PathExtractor";
 
 /**
  * Language detection based on file extension

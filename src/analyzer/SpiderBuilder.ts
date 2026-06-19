@@ -1,11 +1,11 @@
 import { AstWorkerHost } from './ast/AstWorkerHost';
 import { Cache } from './indexing/Cache';
-import { FileReader } from './FileReader';
+import { FileReader } from './source/FileReader';
 import { IndexerStatus } from './indexing/IndexerStatus';
-import { LanguageService } from './LanguageService';
-import { ReferencingFilesFinder } from './ReferencingFilesFinder';
+import { LanguageService } from './source/LanguageService';
+import { ReferencingFilesFinder } from './source/ReferencingFilesFinder';
 import { ReverseIndexManager } from './indexing/ReverseIndexManager';
-import { SourceFileCollector } from './SourceFileCollector';
+import { SourceFileCollector } from './source/SourceFileCollector';
 import { Spider, type SpiderServices } from './spider';
 import { SpiderCacheCoordinator } from './spider/SpiderCacheCoordinator';
 import { SpiderDependencyAnalyzer } from './spider/SpiderDependencyAnalyzer';
