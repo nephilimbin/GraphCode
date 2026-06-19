@@ -6,7 +6,7 @@ import { Cache } from '../Cache';
 import { FileReader } from '../FileReader';
 import { LanguageService } from '../LanguageService';
 import { SourceFileCollector } from '../SourceFileCollector';
-import { SymbolDependencyHelper } from '../SymbolDependencyHelper';
+import { SymbolDependencyHelper } from '../symbol/SymbolDependencyHelper';
 import type { Dependency, SpiderConfig, SymbolDependency, SymbolInfo } from '../foundation/types';
 import { SpiderError, SpiderErrorCode, normalizePath } from '../foundation/types';
 import { isInIgnoredDirectory } from '../utils/PathPredicates';

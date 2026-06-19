@@ -11,7 +11,7 @@
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { SymbolDependency, FileHash, normalizePath } from './foundation/types';
+import { SymbolDependency, FileHash, normalizePath } from '../foundation/types';
 
 /**
  * Entry in the symbol reverse index

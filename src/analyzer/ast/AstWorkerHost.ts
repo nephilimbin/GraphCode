@@ -17,7 +17,7 @@ import type {
   SignatureComparisonResult,
   SignatureInfo,
   TypeAliasInfo,
-} from '../SignatureAnalyzer';
+} from '../symbol/SignatureAnalyzer';
 import type { SymbolDependency, SymbolInfo } from '../foundation/types';
 
 const log = getLogger('AstWorkerHost');

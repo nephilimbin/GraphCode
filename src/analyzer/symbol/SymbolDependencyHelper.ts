@@ -1,5 +1,5 @@
-import { normalizePath } from './foundation/types';
-import { getLogger } from "./foundation/logger"
+import { normalizePath } from '../foundation/types';
+import { getLogger } from "../foundation/logger"
 
 const log = getLogger('SymbolDependencyHelper');
 
@@ -23,7 +23,7 @@ export class SymbolDependencyHelper {
    * should be normalized absolute paths for reliable comparison.
    */
   async doesDependencyTargetFile(
-    dep: import('./foundation/types').SymbolDependency,
+    dep: import('../foundation/types').SymbolDependency,
     sourceFilePath: string,
     targetFilePath: string
   ): Promise<boolean> {
@@ -75,7 +75,7 @@ export class SymbolDependencyHelper {
    * Used for batch processing optimization.
    */
   async resolveTargetPath(
-    dep: import('./foundation/types').SymbolDependency,
+    dep: import('../foundation/types').SymbolDependency,
     sourceFilePath: string
   ): Promise<string | null> {
     const normalizedDepTarget = normalizePath(dep.targetFilePath);

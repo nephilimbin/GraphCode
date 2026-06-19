@@ -41,8 +41,8 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import { getLogger } from '../foundation/logger';
 import { detectLanguageFromExtension } from '../foundation/languageDetection';
-import type { SignatureInfo } from '../SignatureAnalyzer';
-import { SignatureAnalyzer } from '../SignatureAnalyzer';
+import type { SignatureInfo } from '../symbol/SignatureAnalyzer';
+import { SignatureAnalyzer } from '../symbol/SignatureAnalyzer';
 import { SymbolAnalyzer } from '../SymbolAnalyzer';
 import { PythonSymbolAnalyzer } from '../languages/PythonSymbolAnalyzer';
 import { RustSymbolAnalyzer } from '../languages/RustSymbolAnalyzer';
@@ -261,6 +261,6 @@ if (parentPort) {
 // Export types for use in AstWorkerHost
 export type {
     InterfaceMemberInfo, SignatureComparisonResult, SignatureInfo, TypeAliasInfo
-} from '../SignatureAnalyzer';
+} from '../symbol/SignatureAnalyzer';
 export type { SymbolDependency, SymbolInfo } from '../foundation/types';
 export type { WorkerRequest, WorkerResponse };

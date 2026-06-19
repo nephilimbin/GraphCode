@@ -1,5 +1,5 @@
 import { ReverseIndex } from './ReverseIndex';
-import { SymbolReverseIndex } from './SymbolReverseIndex';
+import { SymbolReverseIndex } from './symbol/SymbolReverseIndex';
 import type { Dependency, FileHash, SymbolDependency } from './foundation/types';
 
 /**
