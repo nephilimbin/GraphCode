@@ -1,10 +1,10 @@
-import { LanguageService } from '../source/LanguageService';
-import { PathResolver } from '../utils/PathResolver';
-import { Cache } from '../indexing/Cache';
-import { ReverseIndex } from '../indexing/ReverseIndex';
-import { ReverseIndexManager } from '../indexing/ReverseIndexManager';
-import { Dependency, SpiderError, normalizePath } from '../foundation/types';
-import { getLogger } from "../foundation/logger"
+import { LanguageService } from '../../source/LanguageService';
+import { PathResolver } from '../../utils/PathResolver';
+import { Cache } from '../../indexing/Cache';
+import { ReverseIndex } from '../../indexing/ReverseIndex';
+import { ReverseIndexManager } from '../../indexing/ReverseIndexManager';
+import { Dependency, SpiderError, normalizePath } from '../../foundation/types';
+import { getLogger } from "../../foundation/logger"
 
 const log = getLogger('SpiderDependencyAnalyzer');
 

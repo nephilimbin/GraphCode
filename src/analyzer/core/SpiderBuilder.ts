@@ -1,11 +1,11 @@
-import { AstWorkerHost } from './ast/AstWorkerHost';
-import { Cache } from './indexing/Cache';
-import { FileReader } from './source/FileReader';
-import { IndexerStatus } from './indexing/IndexerStatus';
-import { LanguageService } from './source/LanguageService';
-import { ReferencingFilesFinder } from './source/ReferencingFilesFinder';
-import { ReverseIndexManager } from './indexing/ReverseIndexManager';
-import { SourceFileCollector } from './source/SourceFileCollector';
+import { AstWorkerHost } from '../ast/AstWorkerHost';
+import { Cache } from '../indexing/Cache';
+import { FileReader } from '../source/FileReader';
+import { IndexerStatus } from '../indexing/IndexerStatus';
+import { LanguageService } from '../source/LanguageService';
+import { ReferencingFilesFinder } from '../source/ReferencingFilesFinder';
+import { ReverseIndexManager } from '../indexing/ReverseIndexManager';
+import { SourceFileCollector } from '../source/SourceFileCollector';
 import { Spider, type SpiderServices } from './spider';
 import { SpiderCacheCoordinator } from './spider/SpiderCacheCoordinator';
 import { SpiderDependencyAnalyzer } from './spider/SpiderDependencyAnalyzer';
@@ -15,10 +15,10 @@ import { SpiderIndexingService } from './spider/SpiderIndexingService';
 import { SpiderReferenceLookup } from './spider/SpiderReferenceLookup';
 import { SpiderSymbolService } from './spider/SpiderSymbolService';
 import { SpiderWorkerManager } from './spider/SpiderWorkerManager';
-import { SymbolDependencyHelper } from './symbol/SymbolDependencyHelper';
-import type { Dependency, SpiderConfig, SymbolInfo, SymbolDependency } from './foundation/types';
-import { YIELD_INTERVAL_MS, yieldToEventLoop } from './utils/EventLoopYield';
-import { PathResolver } from './utils/PathResolver';
+import { SymbolDependencyHelper } from '../symbol/SymbolDependencyHelper';
+import type { Dependency, SpiderConfig, SymbolInfo, SymbolDependency } from '../foundation/types';
+import { YIELD_INTERVAL_MS, yieldToEventLoop } from '../utils/EventLoopYield';
+import { PathResolver } from '../utils/PathResolver';
 
 /**
  * Builder for constructing Spider instances with a fluent API.

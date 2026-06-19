@@ -10,10 +10,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Cache } from '../../indexing/Cache';
-import { ReverseIndexManager } from '../../indexing/ReverseIndexManager';
+import { Cache } from '../../../indexing/Cache';
+import { ReverseIndexManager } from '../../../indexing/ReverseIndexManager';
 import { SpiderCacheCoordinator } from '../SpiderCacheCoordinator';
-import type { Dependency, DependencyType } from '../../foundation/types';
+import type { Dependency, DependencyType } from '../../../foundation/types';
 
 type SymbolGraph = { symbols: unknown[]; dependencies: unknown[] };
 

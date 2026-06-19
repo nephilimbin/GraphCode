@@ -1,8 +1,8 @@
-import type { Dependency, SpiderConfig } from '../foundation/types';
-import { normalizePath } from '../foundation/types';
-import { isInIgnoredDirectory } from '../utils/PathPredicates';
+import type { Dependency, SpiderConfig } from '../../foundation/types';
+import { normalizePath } from '../../foundation/types';
+import { isInIgnoredDirectory } from '../../utils/PathPredicates';
 import { SpiderDependencyAnalyzer } from './SpiderDependencyAnalyzer';
-import { getLogger } from "../foundation/logger"
+import { getLogger } from "../../foundation/logger"
 
 const log = getLogger('SpiderGraphCrawler');
 

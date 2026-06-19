@@ -18,9 +18,9 @@
 // ---------------------------------------------------------------------------
 
 // 引擎主门面
-export { Spider } from "./spider";
-export type { SpiderServices } from "./spider";
-export { SpiderBuilder } from "./SpiderBuilder";
+export { Spider } from "./core/spider";
+export type { SpiderServices } from "./core/spider";
+export { SpiderBuilder } from "./core/SpiderBuilder";
 
 // 调用图
 export { CallGraphIndexer } from "./callgraph/CallGraphIndexer";

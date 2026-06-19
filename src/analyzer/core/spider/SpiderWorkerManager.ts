@@ -1,8 +1,8 @@
-import { Cache } from '../indexing/Cache';
-import { IndexerStatus } from '../indexing/IndexerStatus';
-import { IndexerWorkerHost, IndexingResult } from '../indexing/IndexerWorkerHost';
-import { ReverseIndexManager } from '../indexing/ReverseIndexManager';
-import { Dependency, IndexingProgressCallback, normalizePath } from '../foundation/types';
+import { Cache } from '../../indexing/Cache';
+import { IndexerStatus } from '../../indexing/IndexerStatus';
+import { IndexerWorkerHost, IndexingResult } from '../../indexing/IndexerWorkerHost';
+import { ReverseIndexManager } from '../../indexing/ReverseIndexManager';
+import { Dependency, IndexingProgressCallback, normalizePath } from '../../foundation/types';
 
 interface WorkerBuildOptions {
   workerPath: string;
