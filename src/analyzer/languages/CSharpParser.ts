@@ -6,6 +6,7 @@ import { FileReader } from "../FileReader";
 import { Dependency, ILanguageAnalyzer, SpiderError } from "../types";
 import { extractFilePath } from "../utils/PathExtractor";
 import { WasmParserFactory } from "./WasmParserFactory";
+import { resolveWasmFile } from "../wasmResolver";
 
 /**
  * C# import parser backed by tree-sitter WASM.
@@ -36,21 +37,14 @@ export class CSharpParser implements ILanguageAnalyzer {
     }
 
     this.initPromise = (async () => {
-      const extensionPath = this.extensionPath;
-      if (!extensionPath) {
-        throw new Error(
-          "Extension path required for WASM parser initialization. " +
-          "Ensure CSharpParser is constructed with extensionPath parameter."
-        );
-      }
-
       try {
         const factory = WasmParserFactory.getInstance();
 
-        const treeSitterWasmPath = path.join(extensionPath, "dist", "wasm", "tree-sitter.wasm");
+        // Core + language WASM auto-located via wasmResolver (extensionPath optional)
+        const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.extensionPath);
         await factory.init(treeSitterWasmPath);
 
-        const csharpWasmPath = path.join(extensionPath, "dist", "wasm", "tree-sitter-c_sharp.wasm");
+        const csharpWasmPath = resolveWasmFile("tree-sitter-c_sharp.wasm", this.extensionPath);
         this.parser = await factory.getParser("c_sharp", csharpWasmPath);
       } catch (error) {
         this.initPromise = null;

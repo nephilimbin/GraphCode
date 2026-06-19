@@ -26,6 +26,7 @@ import { WasmParserFactory } from "@/analyzer/languages/WasmParserFactory";
 import type { RelationType, SupportedLang, SymbolType } from "../callgraph-types";
 import { getLogger } from "../logger";
 import { normalizePath } from "../path";
+import { resolveQueryFile, resolveWasmFile } from "../wasmResolver";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Node as TreeNode } from "web-tree-sitter";
@@ -37,8 +38,8 @@ import type { CallGraphEdge, CallGraphNode } from "./CallGraphIndexer";
 // ---------------------------------------------------------------------------
 
 export interface ExtractorConfig {
-  /** Absolute path to extension root — used to locate dist/wasm and dist/queries */
-  extensionPath: string;
+  /** Optional package root; omitted → wasmResolver auto-locates dist/wasm & dist/queries */
+  extensionPath?: string;
   /** Absolute workspace root path — used to compute workspace-relative folder */
   workspaceRoot: string;
 }
@@ -179,21 +180,11 @@ export class GraphExtractor {
   ): Promise<ExtractionResult> {
     const normalizedPath = normalizePath(filePath);
 
-    // Resolve WASM paths
-    const treeSitterWasmPath = path.join(
-      this.config.extensionPath,
-      "dist",
-      "wasm",
-      "tree-sitter.wasm",
-    );
+    // Resolve WASM paths (auto-located via wasmResolver; extensionPath optional)
+    const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.config.extensionPath);
 
     const wasmFileName = this.langToWasmFileName(lang);
-    const langWasmPath = path.join(
-      this.config.extensionPath,
-      "dist",
-      "wasm",
-      wasmFileName,
-    );
+    const langWasmPath = resolveWasmFile(wasmFileName, this.config.extensionPath);
 
     // Load query source for this language
     const querySrc = await this.loadQuerySource(lang);
@@ -440,12 +431,7 @@ export class GraphExtractor {
     if (cached !== undefined) return cached;
 
     const queryFileName = `${normalizedLang}.scm`;
-    const queryPath = path.join(
-      this.config.extensionPath,
-      "dist",
-      "queries",
-      queryFileName,
-    );
+    const queryPath = resolveQueryFile(queryFileName, this.config.extensionPath);
     try {
       const src = await fs.readFile(queryPath, "utf8");
       this.querySourceCache.set(normalizedLang, src);

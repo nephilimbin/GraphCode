@@ -51,22 +51,21 @@ import { SwiftSymbolAnalyzer } from '../languages/SwiftSymbolAnalyzer';
 // Worker data
 interface WorkerData {
   /**
-   * Path to the VS Code extension directory.
-   * Required for WASM parser initialization (locating .wasm files in dist/).
+   * Optional package root for locating WASM files.
+   * When omitted, WASM parsers auto-locate dist/wasm via wasmResolver
+   * (__dirname-based), so the worker needs no cwd fallback.
    *
-   * **IMPORTANT:** This must be provided by the extension host when creating the worker.
-   * Without it, WASM parsers (PythonSymbolAnalyzer, RustSymbolAnalyzer) cannot 
-   * initialize and symbol extraction for Python/Rust files will fail.
+   * Provide it only when resources live outside the default dist/ layout.
    *
    * Example: context.extensionPath from VS Code extension activation
-   *
-   * @see Requirements 5.3 - Support Electron Environment
    */
   extensionPath?: string;
 }
 
 const data = workerData as WorkerData;
-const extensionPath = data.extensionPath ?? process.cwd();
+// extensionPath optional: when omitted, analyzers auto-locate WASM via wasmResolver
+// (__dirname-based), so the worker no longer needs a cwd fallback.
+const extensionPath = data.extensionPath;
 
 // Worker message types
 type WorkerRequest =
@@ -88,11 +87,8 @@ type WorkerResponse =
 const log = getLogger('AstWorker');
 const symbolAnalyzer = new SymbolAnalyzer(undefined, { maxFiles: 100 });
 
-// Initialize WASM-based symbol analyzers with extensionPath
-// The extensionPath is required for Python and Rust analyzers to locate WASM files
-// in the extension's dist/ directory (tree-sitter-python.wasm, tree-sitter-rust.wasm)
-// If extensionPath is not provided, WASM initialization will fail and symbol extraction
-// for Python/Rust files will throw errors (caught in handleMessage)
+// Initialize WASM-based symbol analyzers. extensionPath is optional — when omitted,
+// analyzers auto-locate tree-sitter WASM (python/rust/swift) via wasmResolver.
 const pythonSymbolAnalyzer = new PythonSymbolAnalyzer(undefined, extensionPath);
 const rustSymbolAnalyzer = new RustSymbolAnalyzer(undefined, extensionPath);
 const swiftSymbolAnalyzer = new SwiftSymbolAnalyzer(undefined, extensionPath);

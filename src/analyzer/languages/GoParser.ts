@@ -6,6 +6,7 @@ import { FileReader } from "../FileReader";
 import { Dependency, ILanguageAnalyzer, SpiderError } from "../types";
 import { extractFilePath } from "../utils/PathExtractor";
 import { WasmParserFactory } from "./WasmParserFactory";
+import { resolveWasmFile } from "../wasmResolver";
 
 /**
  * Go import parser backed by tree-sitter WASM.
@@ -36,21 +37,14 @@ export class GoParser implements ILanguageAnalyzer {
     }
 
     this.initPromise = (async () => {
-      const extensionPath = this.extensionPath;
-      if (!extensionPath) {
-        throw new Error(
-          "Extension path required for WASM parser initialization. " +
-          "Ensure GoParser is constructed with extensionPath parameter."
-        );
-      }
-
       try {
         const factory = WasmParserFactory.getInstance();
 
-        const treeSitterWasmPath = path.join(extensionPath, "dist", "wasm", "tree-sitter.wasm");
+        // Core + language WASM auto-located via wasmResolver (extensionPath optional)
+        const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.extensionPath);
         await factory.init(treeSitterWasmPath);
 
-        const goWasmPath = path.join(extensionPath, "dist", "wasm", "tree-sitter-go.wasm");
+        const goWasmPath = resolveWasmFile("tree-sitter-go.wasm", this.extensionPath);
         this.parser = await factory.getParser("go", goWasmPath);
       } catch (error) {
         this.initPromise = null;

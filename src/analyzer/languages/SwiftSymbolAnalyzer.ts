@@ -1,10 +1,9 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { Node, Parser } from "web-tree-sitter";
 import { normalizePath } from '../path';
 import { FileReader } from '../FileReader';
 import { ISymbolAnalyzer, SpiderError, SymbolDependency, SymbolInfo } from '../types';
 import { WasmParserFactory } from './WasmParserFactory';
+import { resolveWasmFile } from '../wasmResolver';
 
 /**
  * Swift symbol analyzer backed by tree-sitter WASM.
@@ -33,33 +32,14 @@ export class SwiftSymbolAnalyzer implements ISymbolAnalyzer {
 
     // Start initialization if not already in progress
     this.initPromise ??= (async () => {
-      const extensionPath = await this.resolveExtensionPath();
-      if (!extensionPath) {
-        throw new Error(
-          "Extension path required for WASM parser initialization. " +
-          "Ensure SwiftSymbolAnalyzer is constructed with extensionPath parameter."
-        );
-      }
-
       try {
         const factory = WasmParserFactory.getInstance();
 
-        // Initialize web-tree-sitter with core WASM file
-        const treeSitterWasmPath = path.join(
-          extensionPath,
-          "dist",
-          "wasm",
-          "tree-sitter.wasm"
-        );
+        // Core + language WASM auto-located via wasmResolver (extensionPath optional)
+        const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.extensionPath);
         await factory.init(treeSitterWasmPath);
 
-        // Load Swift language WASM and get parser
-        const swiftWasmPath = path.join(
-          extensionPath,
-          "dist",
-          "wasm",
-          "tree-sitter-swift.wasm"
-        );
+        const swiftWasmPath = resolveWasmFile("tree-sitter-swift.wasm", this.extensionPath);
         this.parser = await factory.getParser("swift", swiftWasmPath);
       } catch (error) {
         // Clear the promise so retry is possible
@@ -75,24 +55,6 @@ export class SwiftSymbolAnalyzer implements ISymbolAnalyzer {
 
     await this.initPromise;
   }
-
-  private async resolveExtensionPath(): Promise<string | undefined> {
-    if (this.extensionPath) {
-      return this.extensionPath;
-    }
-
-    // Test/dev fallback: if running from repository root, use local dist/wasm.
-    const cwdExtensionPath = process.cwd();
-    const fallbackWasmPath = path.join(cwdExtensionPath, "dist", "wasm", "tree-sitter.wasm");
-
-    try {
-      await fs.access(fallbackWasmPath);
-      return cwdExtensionPath;
-    } catch {
-      return undefined;
-    }
-  }
-
   /**
    * Analyze a Swift file and extract symbols
    */

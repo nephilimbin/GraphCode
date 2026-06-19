@@ -16,6 +16,7 @@
 import type { RelationType, SupportedLang, SymbolType } from "../callgraph-types";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { resolveWasmFile } from "../wasmResolver";
 import type { Database, SqlJsStatic } from "sql.js";
 
 // ---------------------------------------------------------------------------
@@ -610,11 +611,11 @@ export class CallGraphIndexer {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns the canonical path to sqljs.wasm given the VS Code extension path.
- * Uses path.join for cross-platform safety.
+ * Returns the canonical path to sqljs.wasm.
+ * extensionPath optional — omitted → wasmResolver auto-locates dist/wasm.
  */
-export function getSqlJsWasmPath(extensionPath: string): string {
-  return path.join(extensionPath, "dist", "wasm", "sqljs.wasm");
+export function getSqlJsWasmPath(extensionPath?: string): string {
+  return resolveWasmFile("sqljs.wasm", extensionPath);
 }
 
 // ---------------------------------------------------------------------------
