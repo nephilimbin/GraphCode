@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { SUPPORTED_SYMBOL_ANALYSIS_EXTENSIONS } from '../../shared/constants';
+import { SUPPORTED_SYMBOL_ANALYSIS_EXTENSIONS } from '../constants';
 import { getLogger } from "../../foundation/logger"
 import { AstWorkerHost } from '../ast/AstWorkerHost';
 import { Cache } from '../Cache';

@@ -1,4 +1,4 @@
-import { IGNORED_DIRECTORIES } from '../../shared/constants';
+import { IGNORED_DIRECTORIES } from '../constants';
 import { normalizePath } from '../types';
 
 /**

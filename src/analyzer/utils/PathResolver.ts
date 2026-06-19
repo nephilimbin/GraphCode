@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { PYTHON_EXTENSIONS, SUPPORTED_FILE_EXTENSIONS } from "../../shared/constants";
+import { PYTHON_EXTENSIONS, SUPPORTED_FILE_EXTENSIONS } from "../constants";
 import { normalizePath } from "../types";
 
 /**
