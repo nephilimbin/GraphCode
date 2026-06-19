@@ -1,6 +1,6 @@
 import { ReverseIndex } from './ReverseIndex';
 import { SymbolReverseIndex } from './SymbolReverseIndex';
-import type { Dependency, FileHash, SymbolDependency } from './types';
+import type { Dependency, FileHash, SymbolDependency } from './foundation/types';
 
 /**
  * Encapsulates reverse index lifecycle and operations for Spider/MCP.

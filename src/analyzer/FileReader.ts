@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
-import { SpiderError, SpiderErrorCode } from './types';
-import { getLogger } from "./logger"
+import { SpiderError, SpiderErrorCode } from './foundation/types';
+import { getLogger } from "./foundation/logger"
 
 const log = getLogger('FileReader');
 

@@ -7,7 +7,7 @@
 
 import { Worker } from 'node:worker_threads';
 import * as path from 'node:path';
-import type { Dependency } from './types';
+import type { Dependency } from './foundation/types';
 import type { IndexerStatusCallback, IndexerStatusSnapshot, IndexerState } from './IndexerStatus';
 
 interface WorkerConfig {

@@ -1,14 +1,14 @@
 import path from 'node:path';
-import { SUPPORTED_SYMBOL_ANALYSIS_EXTENSIONS } from '../constants';
-import { getLogger } from "../logger"
+import { SUPPORTED_SYMBOL_ANALYSIS_EXTENSIONS } from '../foundation/constants';
+import { getLogger } from "../foundation/logger"
 import { AstWorkerHost } from '../ast/AstWorkerHost';
 import { Cache } from '../Cache';
 import { FileReader } from '../FileReader';
 import { LanguageService } from '../LanguageService';
 import { SourceFileCollector } from '../SourceFileCollector';
 import { SymbolDependencyHelper } from '../SymbolDependencyHelper';
-import type { Dependency, SpiderConfig, SymbolDependency, SymbolInfo } from '../types';
-import { SpiderError, SpiderErrorCode, normalizePath } from '../types';
+import type { Dependency, SpiderConfig, SymbolDependency, SymbolInfo } from '../foundation/types';
+import { SpiderError, SpiderErrorCode, normalizePath } from '../foundation/types';
 import { isInIgnoredDirectory } from '../utils/PathPredicates';
 import { PathResolver } from '../utils/PathResolver';
 

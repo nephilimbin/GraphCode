@@ -1,8 +1,8 @@
 import { FileReader } from '../FileReader';
 import { ReferencingFilesFinder } from '../ReferencingFilesFinder';
 import { ReverseIndexManager } from '../ReverseIndexManager';
-import type { Dependency } from '../types';
-import { normalizePath } from '../types';
+import type { Dependency } from '../foundation/types';
+import { normalizePath } from '../foundation/types';
 import { SpiderDependencyAnalyzer } from './SpiderDependencyAnalyzer';
 
 /**

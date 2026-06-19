@@ -3,8 +3,8 @@ import { PathResolver } from '../utils/PathResolver';
 import { Cache } from '../Cache';
 import { ReverseIndex } from '../ReverseIndex';
 import { ReverseIndexManager } from '../ReverseIndexManager';
-import { Dependency, SpiderError, normalizePath } from '../types';
-import { getLogger } from "../logger"
+import { Dependency, SpiderError, normalizePath } from '../foundation/types';
+import { getLogger } from "../foundation/logger"
 
 const log = getLogger('SpiderDependencyAnalyzer');
 

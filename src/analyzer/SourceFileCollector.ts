@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { isSupportedSourceFile, shouldSkipDirectory } from './SourceFileFilters';
-import { getLogger } from "./logger"
+import { getLogger } from "./foundation/logger"
 
 const log = getLogger('SourceFileCollector');
 

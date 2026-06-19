@@ -11,14 +11,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Worker } from 'node:worker_threads';
-import { getLogger } from "../logger"
+import { getLogger } from "../foundation/logger"
 import type {
   InterfaceMemberInfo,
   SignatureComparisonResult,
   SignatureInfo,
   TypeAliasInfo,
 } from '../SignatureAnalyzer';
-import type { SymbolDependency, SymbolInfo } from '../types';
+import type { SymbolDependency, SymbolInfo } from '../foundation/types';
 
 const log = getLogger('AstWorkerHost');
 

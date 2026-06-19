@@ -23,10 +23,10 @@
  */
 
 import { WasmParserFactory } from "@/analyzer/languages/WasmParserFactory";
-import type { RelationType, SupportedLang, SymbolType } from "../callgraph-types";
-import { getLogger } from "../logger";
-import { normalizePath } from "../path";
-import { resolveQueryFile, resolveWasmFile } from "../wasmResolver";
+import type { RelationType, SupportedLang, SymbolType } from "../foundation/callgraph-types";
+import { getLogger } from "../foundation/logger";
+import { normalizePath } from "../foundation/path";
+import { resolveQueryFile, resolveWasmFile } from "../foundation/wasmResolver";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Node as TreeNode } from "web-tree-sitter";

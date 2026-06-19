@@ -39,8 +39,8 @@
  */
 
 import { parentPort, workerData } from 'node:worker_threads';
-import { getLogger } from '../logger';
-import { detectLanguageFromExtension } from '../languageDetection';
+import { getLogger } from '../foundation/logger';
+import { detectLanguageFromExtension } from '../foundation/languageDetection';
 import type { SignatureInfo } from '../SignatureAnalyzer';
 import { SignatureAnalyzer } from '../SignatureAnalyzer';
 import { SymbolAnalyzer } from '../SymbolAnalyzer';
@@ -262,5 +262,5 @@ if (parentPort) {
 export type {
     InterfaceMemberInfo, SignatureComparisonResult, SignatureInfo, TypeAliasInfo
 } from '../SignatureAnalyzer';
-export type { SymbolDependency, SymbolInfo } from '../types';
+export type { SymbolDependency, SymbolInfo } from '../foundation/types';
 export type { WorkerRequest, WorkerResponse };

@@ -1,9 +1,9 @@
 import { Node, Parser } from "web-tree-sitter";
-import { normalizePath } from '../path';
+import { normalizePath } from '../foundation/path';
 import { FileReader } from '../FileReader';
-import { ISymbolAnalyzer, SpiderError, SymbolDependency, SymbolInfo } from '../types';
+import { ISymbolAnalyzer, SpiderError, SymbolDependency, SymbolInfo } from '../foundation/types';
 import { WasmParserFactory } from './WasmParserFactory';
-import { resolveWasmFile } from '../wasmResolver';
+import { resolveWasmFile } from '../foundation/wasmResolver';
 
 /**
  * Python symbol analyzer backed by tree-sitter WASM.

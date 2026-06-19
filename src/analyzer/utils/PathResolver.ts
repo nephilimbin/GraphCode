@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { PYTHON_EXTENSIONS, SUPPORTED_FILE_EXTENSIONS } from "../constants";
-import { normalizePath } from "../types";
+import { PYTHON_EXTENSIONS, SUPPORTED_FILE_EXTENSIONS } from "../foundation/constants";
+import { normalizePath } from "../foundation/types";
 
 /**
  * Resolves module paths to absolute file paths

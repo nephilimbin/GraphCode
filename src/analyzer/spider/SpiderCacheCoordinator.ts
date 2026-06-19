@@ -1,6 +1,6 @@
 import { Cache } from '../Cache';
-import type { Dependency, SymbolDependency, SymbolInfo } from '../types';
-import { normalizePath } from '../types';
+import type { Dependency, SymbolDependency, SymbolInfo } from '../foundation/types';
+import { normalizePath } from '../foundation/types';
 import { ReverseIndexManager } from '../ReverseIndexManager';
 
 type SymbolGraph = { symbols: SymbolInfo[]; dependencies: SymbolDependency[] };

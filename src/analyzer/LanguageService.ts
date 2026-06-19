@@ -10,7 +10,7 @@ import { RustParser } from "./languages/RustParser";
 import { RustSymbolAnalyzer } from "./languages/RustSymbolAnalyzer";
 import { SwiftParser } from "./languages/SwiftParser";
 import { SwiftSymbolAnalyzer } from "./languages/SwiftSymbolAnalyzer";
-import { ILanguageAnalyzer, ISymbolAnalyzer } from "./types";
+import { ILanguageAnalyzer, ISymbolAnalyzer } from "./foundation/types";
 import { extractFilePath } from "./utils/PathExtractor";
 
 /**

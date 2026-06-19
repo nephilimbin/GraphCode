@@ -7,7 +7,7 @@ import {
   type VariableStatement,
 } from "ts-morph";
 import { FileReader } from "./FileReader";
-import { ISymbolAnalyzer, SymbolDependency, SymbolInfo } from "./types";
+import { ISymbolAnalyzer, SymbolDependency, SymbolInfo } from "./foundation/types";
 
 /** Map ts-morph kind names to category */
 function getCategory(
@@ -35,7 +35,7 @@ function getCategory(
   }
 }
 
-import { getLogger } from "./logger"
+import { getLogger } from "./foundation/logger"
 
 const log = getLogger("SymbolAnalyzer");
 

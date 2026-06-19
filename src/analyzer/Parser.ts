@@ -1,5 +1,5 @@
 import { FileReader } from "./FileReader";
-import { Dependency, ILanguageAnalyzer, ParsedImport } from "./types";
+import { Dependency, ILanguageAnalyzer, ParsedImport } from "./foundation/types";
 import { extractFilePath } from "./utils/PathExtractor";
 import { PathResolver } from "./utils/PathResolver";
 

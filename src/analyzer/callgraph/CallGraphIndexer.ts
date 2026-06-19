@@ -13,10 +13,10 @@
  * SCHEMA: specs/001-live-call-graph/contracts/db-schema.sql
  */
 
-import type { RelationType, SupportedLang, SymbolType } from "../callgraph-types";
+import type { RelationType, SupportedLang, SymbolType } from "../foundation/callgraph-types";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { resolveWasmFile } from "../wasmResolver";
+import { resolveWasmFile } from "../foundation/wasmResolver";
 import type { Database, SqlJsStatic } from "sql.js";
 
 // ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ import { SpiderReferenceLookup } from './spider/SpiderReferenceLookup';
 import { SpiderSymbolService } from './spider/SpiderSymbolService';
 import { SpiderWorkerManager } from './spider/SpiderWorkerManager';
 import { SymbolDependencyHelper } from './SymbolDependencyHelper';
-import type { Dependency, IndexingProgressCallback, SpiderConfig } from './types';
+import type { Dependency, IndexingProgressCallback, SpiderConfig } from './foundation/types';
 import { YIELD_INTERVAL_MS, yieldToEventLoop } from './utils/EventLoopYield';
 import { PathResolver } from './utils/PathResolver';
 
@@ -40,8 +40,8 @@ export interface SpiderServices {
   
   /** Cache for symbol analysis results */
   symbolCache: Cache<{
-    symbols: import('./types').SymbolInfo[];
-    dependencies: import('./types').SymbolDependency[];
+    symbols: import('./foundation/types').SymbolInfo[];
+    dependencies: import('./foundation/types').SymbolDependency[];
   }>;
   
   /** File reader utility */
@@ -195,8 +195,8 @@ export class Spider {
   // Kept as `cache` for backward compatibility (some tests/tools access it dynamically).
   private readonly cache: Cache<Dependency[]>;
   private readonly symbolCache: Cache<{
-    symbols: import('./types').SymbolInfo[];
-    dependencies: import('./types').SymbolDependency[];
+    symbols: import('./foundation/types').SymbolInfo[];
+    dependencies: import('./foundation/types').SymbolDependency[];
   }>;
   private readonly fileReader: FileReader;
   private readonly astWorkerHost: AstWorkerHost;
@@ -550,8 +550,8 @@ export class Spider {
   }
 
   async getSymbolGraph(filePath: string): Promise<{
-    symbols: import('./types').SymbolInfo[];
-    dependencies: import('./types').SymbolDependency[];
+    symbols: import('./foundation/types').SymbolInfo[];
+    dependencies: import('./foundation/types').SymbolDependency[];
   }> {
     return this.symbolService.getSymbolGraph(filePath);
   }
@@ -560,14 +560,14 @@ export class Spider {
     return this.dependencyAnalyzer.resolveModuleSpecifier(fromFilePath, moduleSpecifier);
   }
 
-  async findUnusedSymbols(filePath: string): Promise<import('./types').SymbolInfo[]> {
+  async findUnusedSymbols(filePath: string): Promise<import('./foundation/types').SymbolInfo[]> {
     return this.symbolService.findUnusedSymbols(filePath);
   }
 
   async scanDeadCode(
     scopePath?: string,
     options?: { maxFiles?: number }
-  ): Promise<{ entries: Array<{ filePath: string; unusedSymbols: import('./types').SymbolInfo[] }>; scannedFiles: number; skippedFiles: number }> {
+  ): Promise<{ entries: Array<{ filePath: string; unusedSymbols: import('./foundation/types').SymbolInfo[] }>; scannedFiles: number; skippedFiles: number }> {
     const resolvedScope = scopePath ?? this.config.rootDir;
     return this.symbolService.scanDeadCode(resolvedScope, {
       maxFiles: options?.maxFiles,
@@ -583,7 +583,7 @@ export class Spider {
     return this.symbolService.verifyDependencyUsageBatch(sourceFile, targetFiles);
   }
 
-  async getSymbolDependents(filePath: string, symbolName: string): Promise<import('./types').SymbolDependency[]> {
+  async getSymbolDependents(filePath: string, symbolName: string): Promise<import('./foundation/types').SymbolDependency[]> {
     return this.symbolService.getSymbolDependents(filePath, symbolName);
   }
 

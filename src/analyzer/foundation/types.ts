@@ -202,13 +202,6 @@ export interface FileHash {
   size: number;
 }
 
-// Re-export IndexerStatus types for convenience
-export type {
-  IndexerState,
-  IndexerStatusCallback,
-  IndexerStatusSnapshot
-} from "./IndexerStatus";
-
 /**
  * Progress callback for indexing operations
  */

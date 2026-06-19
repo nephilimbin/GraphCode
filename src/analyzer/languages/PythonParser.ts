@@ -1,12 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Node, Parser } from "web-tree-sitter";
-import { normalizePath } from "../path";
+import { normalizePath } from "../foundation/path";
 import { FileReader } from "../FileReader";
-import { Dependency, ILanguageAnalyzer, SpiderError } from "../types";
+import { Dependency, ILanguageAnalyzer, SpiderError } from "../foundation/types";
 import { extractFilePath } from "../utils/PathExtractor";
 import { WasmParserFactory } from "./WasmParserFactory";
-import { resolveWasmFile } from "../wasmResolver";
+import { resolveWasmFile } from "../foundation/wasmResolver";
 
 /**
  * Python import parser backed by tree-sitter WASM.

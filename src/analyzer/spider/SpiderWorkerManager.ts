@@ -2,7 +2,7 @@ import { Cache } from '../Cache';
 import { IndexerStatus } from '../IndexerStatus';
 import { IndexerWorkerHost, IndexingResult } from '../IndexerWorkerHost';
 import { ReverseIndexManager } from '../ReverseIndexManager';
-import { Dependency, IndexingProgressCallback, normalizePath } from '../types';
+import { Dependency, IndexingProgressCallback, normalizePath } from '../foundation/types';
 
 interface WorkerBuildOptions {
   workerPath: string;

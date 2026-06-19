@@ -47,7 +47,7 @@ export type {
 // ---------------------------------------------------------------------------
 
 // analyzer 自有的 symbol / dependency / index 类型(含 SymbolNode / CallEdge 等)
-export * from "./types";
+export * from "./foundation/types";
 
 // 调用图枚举与序列化类型(具名导出,避免与 types.ts 的 Serialized* 重名)
 export type {
@@ -57,7 +57,7 @@ export type {
   SerializedCallNode,
   SerializedCallEdge,
   SerializedCompoundNode,
-} from "./callgraph-types";
+} from "./foundation/callgraph-types";
 
 // ---------------------------------------------------------------------------
 // SDK 集成辅助(超出 ADR §3.3 核心契约,供集成方诊断 / 自定义资源定位)
@@ -67,4 +67,4 @@ export {
   resolveResourcesDir,
   resolveWasmFile,
   resolveQueryFile,
-} from "./wasmResolver";
+} from "./foundation/wasmResolver";

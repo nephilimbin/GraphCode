@@ -16,7 +16,7 @@ import { SpiderReferenceLookup } from './spider/SpiderReferenceLookup';
 import { SpiderSymbolService } from './spider/SpiderSymbolService';
 import { SpiderWorkerManager } from './spider/SpiderWorkerManager';
 import { SymbolDependencyHelper } from './SymbolDependencyHelper';
-import type { Dependency, SpiderConfig, SymbolInfo, SymbolDependency } from './types';
+import type { Dependency, SpiderConfig, SymbolInfo, SymbolDependency } from './foundation/types';
 import { YIELD_INTERVAL_MS, yieldToEventLoop } from './utils/EventLoopYield';
 import { PathResolver } from './utils/PathResolver';
 

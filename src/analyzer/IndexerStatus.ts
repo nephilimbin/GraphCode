@@ -9,7 +9,7 @@
  * without coupling to any specific UI framework.
  */
 
-import { getLogger } from "./logger"
+import { getLogger } from "./foundation/logger"
 
 /** Logger instance for IndexerStatus */
 const log = getLogger('IndexerStatus');

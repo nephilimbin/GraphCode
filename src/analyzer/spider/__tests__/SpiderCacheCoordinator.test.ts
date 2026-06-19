@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Cache } from '../../Cache';
 import { ReverseIndexManager } from '../../ReverseIndexManager';
 import { SpiderCacheCoordinator } from '../SpiderCacheCoordinator';
-import type { Dependency, DependencyType } from '../../types';
+import type { Dependency, DependencyType } from '../../foundation/types';
 
 type SymbolGraph = { symbols: unknown[]; dependencies: unknown[] };
 

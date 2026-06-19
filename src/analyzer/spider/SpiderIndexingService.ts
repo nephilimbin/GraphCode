@@ -1,10 +1,10 @@
-import { getLogger } from "../logger"
+import { getLogger } from "../foundation/logger"
 import { Cache } from '../Cache';
 import { IndexerStatus } from '../IndexerStatus';
 import { ReverseIndexManager } from '../ReverseIndexManager';
 import { SourceFileCollector } from '../SourceFileCollector';
-import type { Dependency, IndexingProgressCallback, SpiderConfig, SymbolDependency, SymbolInfo } from '../types';
-import { normalizePath, SpiderError } from '../types';
+import type { Dependency, IndexingProgressCallback, SpiderConfig, SymbolDependency, SymbolInfo } from '../foundation/types';
+import { normalizePath, SpiderError } from '../foundation/types';
 import { YIELD_INTERVAL_MS } from '../utils/EventLoopYield';
 import { SpiderDependencyAnalyzer } from './SpiderDependencyAnalyzer';
 import { SpiderIndexingCancellation } from './SpiderIndexingCancellation';
