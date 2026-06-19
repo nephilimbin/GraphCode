@@ -1,5 +1,4 @@
-import { Spider } from '../../analyzer/spider';
-import { normalizePath } from '../../analyzer/types';
+import { Spider, normalizePath } from '../../analyzer';
 
 type Logger = {
   debug: (message: string, ...args: unknown[]) => void;

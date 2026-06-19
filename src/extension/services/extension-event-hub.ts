@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
-import type { Spider } from "../../analyzer/spider";
+import type { Spider } from "../../analyzer";
 import { SUPPORTED_SOURCE_FILE_REGEX } from "../../shared/constants";
 import type { VsCodeLogger } from "../extensionLogger"
 import type { BackgroundIndexingManager } from "./background-indexing-manager";

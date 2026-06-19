@@ -1,5 +1,4 @@
-import { LspCallHierarchyAnalyzer } from "../../analyzer/LspCallHierarchyAnalyzer";
-import { Spider } from "../../analyzer/spider";
+import { LspCallHierarchyAnalyzer, Spider } from "../../analyzer";
 import { convertSpiderToLspFormat } from "../../shared/converters";
 import { normalizePath } from "../../shared/path";
 import type { IntraFileGraph, SymbolDependency, SymbolInfo } from "../../shared/types";

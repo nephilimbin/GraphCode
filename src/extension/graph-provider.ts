@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-import type { IndexerStatusSnapshot } from "../analyzer/indexer-status";
-import { Spider } from "../analyzer/spider";
+import { Spider, type IndexerStatusSnapshot } from "../analyzer";
 import { SUPPORTED_SOURCE_FILE_REGEX } from "../shared/constants";
 import type {
   ExtensionToWebviewMessage,

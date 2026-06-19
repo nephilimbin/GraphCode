@@ -1,4 +1,4 @@
-import { Spider } from '../../analyzer/spider';
+import { Spider } from '../../analyzer';
 import type { UnusedAnalysisCache } from './unused-analysis-cache';
 
 type Logger = {

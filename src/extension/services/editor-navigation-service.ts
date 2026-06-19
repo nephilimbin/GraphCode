@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
-import { Spider } from '../../analyzer/spider';
+import { Spider } from '../../analyzer';
 
 type Logger = {
   debug: (message: string, ...args: unknown[]) => void;

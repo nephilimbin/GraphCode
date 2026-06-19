@@ -1,7 +1,6 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { Spider } from "../../analyzer/spider";
-import { SpiderBuilder } from "../../analyzer/SpiderBuilder";
+import { Spider, SpiderBuilder } from "../../analyzer";
 import type { VsCodeLogger } from "../extensionLogger"
 import { WebviewManager } from "../infrastructure/webview-manager";
 import { BackgroundIndexingManager } from "./background-indexing-manager";

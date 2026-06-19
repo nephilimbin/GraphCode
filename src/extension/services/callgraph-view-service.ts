@@ -13,11 +13,14 @@
  * NO vscode imports allowed in analyzer/ — this service is the only VS Code entry point.
  */
 
-import { CallGraphIndexer, getSqlJsWasmPath } from "@/analyzer/callgraph/CallGraphIndexer";
-import { queryNeighbourhood } from "@/analyzer/callgraph/CallGraphQuery";
-import { detectCycleEdges } from "@/analyzer/callgraph/cycleUtils";
-import { GraphExtractor } from "@/analyzer/callgraph/GraphExtractor";
-import { SourceFileCollector } from "@/analyzer/SourceFileCollector";
+import {
+  CallGraphIndexer,
+  getSqlJsWasmPath,
+  queryNeighbourhood,
+  detectCycleEdges,
+  GraphExtractor,
+  SourceFileCollector,
+} from "@/analyzer";
 import type {
   CallGraphExtensionMessage,
   CallGraphOpenFileCommand,
