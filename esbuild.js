@@ -206,7 +206,7 @@ function browserBundle(entryPoint, outfile, extra = {}) {
 
 async function createAllContexts() {
   const extension = await esbuild.context(nodeBundle('src/extension.ts', 'dist/extension.js', { external: ['vscode', 'web-tree-sitter'] }));
-  const worker = await esbuild.context(nodeBundle('src/analyzer/IndexerWorker.ts', 'dist/indexerWorker.js', { external: ['web-tree-sitter'] }));
+  const worker = await esbuild.context(nodeBundle('src/analyzer/indexing/IndexerWorker.ts', 'dist/indexerWorker.js', { external: ['web-tree-sitter'] }));
   const astWorker = await esbuild.context(nodeBundle('src/analyzer/ast/AstWorker.ts', 'dist/astWorker.js', { external: ['web-tree-sitter'] }));
   const webview = await esbuild.context(browserBundle('src/webview/index.tsx', 'dist/webview.js'));
   const callgraphWebview = await esbuild.context(browserBundle('src/webview/callgraph/index.tsx', 'dist/callgraph.js'));

@@ -40,7 +40,7 @@ export type {
   IndexerState,
   IndexerStatusSnapshot,
   IndexerStatusCallback,
-} from "./IndexerStatus";
+} from "./indexing/IndexerStatus";
 
 // ---------------------------------------------------------------------------
 // 公共类型层

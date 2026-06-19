@@ -2,7 +2,7 @@ import path from 'node:path';
 import { SUPPORTED_SYMBOL_ANALYSIS_EXTENSIONS } from '../foundation/constants';
 import { getLogger } from "../foundation/logger"
 import { AstWorkerHost } from '../ast/AstWorkerHost';
-import { Cache } from '../Cache';
+import { Cache } from '../indexing/Cache';
 import { FileReader } from '../FileReader';
 import { LanguageService } from '../LanguageService';
 import { SourceFileCollector } from '../SourceFileCollector';

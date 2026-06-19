@@ -1,10 +1,10 @@
 import { AstWorkerHost } from './ast/AstWorkerHost';
-import { Cache } from './Cache';
+import { Cache } from './indexing/Cache';
 import { FileReader } from './FileReader';
-import { IndexerStatus, type IndexerStatusSnapshot } from './IndexerStatus';
+import { IndexerStatus, type IndexerStatusSnapshot } from './indexing/IndexerStatus';
 import { LanguageService } from './LanguageService';
 import { ReferencingFilesFinder } from './ReferencingFilesFinder';
-import { ReverseIndexManager } from './ReverseIndexManager';
+import { ReverseIndexManager } from './indexing/ReverseIndexManager';
 import { SourceFileCollector } from './SourceFileCollector';
 import { SpiderCacheCoordinator } from './spider/SpiderCacheCoordinator';
 import { SpiderDependencyAnalyzer } from './spider/SpiderDependencyAnalyzer';
@@ -610,8 +610,8 @@ export class Spider {
    * Get cache stats (synchronous, file count may be 0 if worker not queried yet)
    */
   getCacheStats(): {
-    dependencyCache: import('./Cache').CacheStats;
-    symbolCache: import('./Cache').CacheStats;
+    dependencyCache: import('./indexing/Cache').CacheStats;
+    symbolCache: import('./indexing/Cache').CacheStats;
     symbolAnalyzerFileCount: number;
     reverseIndexStats?: { indexedFiles: number; targetFiles: number; totalReferences: number };
   } {
@@ -627,8 +627,8 @@ export class Spider {
    * Get cache stats with accurate AST worker file count (async)
    */
   async getCacheStatsAsync(): Promise<{
-    dependencyCache: import('./Cache').CacheStats;
-    symbolCache: import('./Cache').CacheStats;
+    dependencyCache: import('./indexing/Cache').CacheStats;
+    symbolCache: import('./indexing/Cache').CacheStats;
     symbolAnalyzerFileCount: number;
     reverseIndexStats?: { indexedFiles: number; targetFiles: number; totalReferences: number };
   }> {

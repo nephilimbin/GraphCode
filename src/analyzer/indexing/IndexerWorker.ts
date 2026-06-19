@@ -33,16 +33,16 @@
  * @see Requirements 5.3 - Support Electron Environment (workers delegate to extension host)
  */
 
-import { ConsoleLogger } from "./foundation/logger"
+import { ConsoleLogger } from "../foundation/logger"
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { parentPort, workerData } from "node:worker_threads";
-import { LanguageService } from "./LanguageService";
+import { LanguageService } from "../LanguageService";
 import {
   isSupportedSourceFile,
   shouldSkipDirectory,
-} from "./SourceFileFilters";
-import type { Dependency } from "./foundation/types";
+} from "../SourceFileFilters";
+import type { Dependency } from "../foundation/types";
 
 const log = new ConsoleLogger("IndexerWorker");
 

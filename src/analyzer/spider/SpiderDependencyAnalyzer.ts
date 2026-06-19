@@ -1,8 +1,8 @@
 import { LanguageService } from '../LanguageService';
 import { PathResolver } from '../utils/PathResolver';
-import { Cache } from '../Cache';
-import { ReverseIndex } from '../ReverseIndex';
-import { ReverseIndexManager } from '../ReverseIndexManager';
+import { Cache } from '../indexing/Cache';
+import { ReverseIndex } from '../indexing/ReverseIndex';
+import { ReverseIndexManager } from '../indexing/ReverseIndexManager';
 import { Dependency, SpiderError, normalizePath } from '../foundation/types';
 import { getLogger } from "../foundation/logger"
 

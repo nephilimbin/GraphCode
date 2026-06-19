@@ -5,8 +5,8 @@ import {
   SerializedReverseIndex,
   Dependency,
   normalizePath,
-} from './foundation/types';
-import { getLogger } from "./foundation/logger"
+} from '../foundation/types';
+import { getLogger } from "../foundation/logger"
 
 /** Logger instance for ReverseIndex */
 const log = getLogger('ReverseIndex');
