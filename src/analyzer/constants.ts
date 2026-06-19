@@ -59,4 +59,4 @@ export const IGNORED_DIRECTORIES = [
   '.venv',
   'venv',
   'target',
-] as const;
+];

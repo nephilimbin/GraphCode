@@ -1096,6 +1096,7 @@
     "lint:fix": "eslint src --fix",
     "check:types": "npm run check:types:clean",
     "check:types:clean": "node -e \"require('node:fs').rmSync('out', { recursive: true, force: true });\" && tsc --noEmit",
+    "check:types:analyzer": "tsc --noEmit -p tsconfig.analyzer.json",
     "audit": "npm audit",
     "audit:fix": "npm audit fix",
     "package": "vsce package --out release/",
