@@ -15,8 +15,8 @@
  * Architecture: Pure Node.js, no VS Code dependencies
  */
 
-import { normalizePath } from "./foundation/path";
-import type { CallEdge, CycleType, IntraFileGraph, SymbolNode } from "./foundation/types";
+import { normalizePath } from "../foundation/path";
+import type { CallEdge, CycleType, IntraFileGraph, SymbolNode } from "../foundation/types";
 
 /**
  * LSP Symbol Information (subset of vscode.SymbolInformation)

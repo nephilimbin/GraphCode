@@ -33,7 +33,7 @@ export { detectCycleEdges } from "./callgraph/cycleUtils";
 
 // 收集与分析器
 export { SourceFileCollector } from "./source/SourceFileCollector";
-export { LspCallHierarchyAnalyzer } from "./LspCallHierarchyAnalyzer";
+export { LspCallHierarchyAnalyzer } from "./lsp/LspCallHierarchyAnalyzer";
 
 // 索引状态(类型)
 export type {
