@@ -35,7 +35,7 @@ function getCategory(
   }
 }
 
-import { getLogger } from "../foundation/logger"
+import { getLogger } from "./logger"
 
 const log = getLogger("SymbolAnalyzer");
 

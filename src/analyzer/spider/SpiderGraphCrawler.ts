@@ -2,7 +2,7 @@ import type { Dependency, SpiderConfig } from '../types';
 import { normalizePath } from '../types';
 import { isInIgnoredDirectory } from '../utils/PathPredicates';
 import { SpiderDependencyAnalyzer } from './SpiderDependencyAnalyzer';
-import { getLogger } from "../../foundation/logger"
+import { getLogger } from "../logger"
 
 const log = getLogger('SpiderGraphCrawler');
 

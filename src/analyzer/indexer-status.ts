@@ -9,7 +9,7 @@
  * without coupling to any specific UI framework.
  */
 
-import { getLogger } from '../shared/logger';
+import { getLogger } from './logger';
 
 /** Logger instance for IndexerStatus */
 const log = getLogger('IndexerStatus');

@@ -4,7 +4,7 @@ import { Cache } from '../Cache';
 import { ReverseIndex } from '../ReverseIndex';
 import { ReverseIndexManager } from '../ReverseIndexManager';
 import { Dependency, SpiderError, normalizePath } from '../types';
-import { getLogger } from "../../foundation/logger"
+import { getLogger } from "../logger"
 
 const log = getLogger('SpiderDependencyAnalyzer');
 

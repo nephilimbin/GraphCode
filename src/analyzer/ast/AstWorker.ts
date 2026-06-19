@@ -39,7 +39,7 @@
  */
 
 import { parentPort, workerData } from 'node:worker_threads';
-import { getLogger } from '../../shared/logger';
+import { getLogger } from '../logger';
 import { detectLanguageFromExtension } from '../languageDetection';
 import type { SignatureInfo } from '../SignatureAnalyzer';
 import { SignatureAnalyzer } from '../SignatureAnalyzer';

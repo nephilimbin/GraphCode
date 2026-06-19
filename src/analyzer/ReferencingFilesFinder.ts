@@ -1,5 +1,5 @@
 import { SourceFileCollector } from './SourceFileCollector';
-import { getLogger } from "../foundation/logger"
+import { getLogger } from "./logger"
 import { Dependency, normalizePath } from './types';
 
 const log = getLogger('ReferencingFilesFinder');

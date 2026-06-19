@@ -1,5 +1,5 @@
 import { normalizePath } from './types';
-import { getLogger } from "../foundation/logger"
+import { getLogger } from "./logger"
 
 const log = getLogger('SymbolDependencyHelper');
 

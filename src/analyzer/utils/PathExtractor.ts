@@ -1,4 +1,4 @@
-import { getLogger } from "../../foundation/logger"
+import { getLogger } from "../logger"
 
 /**
  * Utility functions for extracting file paths from various formats.

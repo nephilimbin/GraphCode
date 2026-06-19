@@ -1,4 +1,4 @@
-import { getLogger } from "../../foundation/logger"
+import { getLogger } from "../logger"
 import { Cache } from '../Cache';
 import { IndexerStatus } from '../IndexerStatus';
 import { ReverseIndexManager } from '../ReverseIndexManager';

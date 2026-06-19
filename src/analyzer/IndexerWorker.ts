@@ -33,7 +33,7 @@
  * @see Requirements 5.3 - Support Electron Environment (workers delegate to extension host)
  */
 
-import { ConsoleLogger } from "../foundation/logger"
+import { ConsoleLogger } from "./logger"
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { parentPort, workerData } from "node:worker_threads";

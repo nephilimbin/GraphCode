@@ -6,7 +6,7 @@ import {
   Dependency,
   normalizePath,
 } from './types';
-import { getLogger } from "../foundation/logger"
+import { getLogger } from "./logger"
 
 /** Logger instance for ReverseIndex */
 const log = getLogger('ReverseIndex');
