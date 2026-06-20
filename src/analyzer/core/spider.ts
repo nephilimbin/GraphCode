@@ -1,23 +1,16 @@
-import { AstWorkerHost } from '../ast/AstWorkerHost';
-import { Cache } from '../indexing/Cache';
-import { FileReader } from '../source/FileReader';
-import { IndexerStatus, type IndexerStatusSnapshot } from '../indexing/IndexerStatus';
-import { LanguageService } from '../source/LanguageService';
-import { ReferencingFilesFinder } from '../source/ReferencingFilesFinder';
-import { ReverseIndexManager } from '../indexing/ReverseIndexManager';
-import { SourceFileCollector } from '../source/SourceFileCollector';
-import { SpiderCacheCoordinator } from './spider/SpiderCacheCoordinator';
-import { SpiderDependencyAnalyzer } from './spider/SpiderDependencyAnalyzer';
-import { SpiderGraphCrawler } from './spider/SpiderGraphCrawler';
-import { SpiderIndexingCancellation } from './spider/SpiderIndexingCancellation';
-import { SpiderIndexingService } from './spider/SpiderIndexingService';
-import { SpiderReferenceLookup } from './spider/SpiderReferenceLookup';
-import { SpiderSymbolService } from './spider/SpiderSymbolService';
-import { SpiderWorkerManager } from './spider/SpiderWorkerManager';
-import { SymbolDependencyHelper } from '../symbol/SymbolDependencyHelper';
+import type { AstWorkerHost } from '../ast/AstWorkerHost';
+import type { Cache } from '../indexing/Cache';
+import type { IndexerStatus, IndexerStatusSnapshot } from '../indexing/IndexerStatus';
+import type { ReverseIndexManager } from '../indexing/ReverseIndexManager';
+import type { SourceFileCollector } from '../source/SourceFileCollector';
+import type { SpiderCacheCoordinator } from './spider/SpiderCacheCoordinator';
+import type { SpiderDependencyAnalyzer } from './spider/SpiderDependencyAnalyzer';
+import type { SpiderGraphCrawler } from './spider/SpiderGraphCrawler';
+import type { SpiderIndexingService } from './spider/SpiderIndexingService';
+import type { SpiderReferenceLookup } from './spider/SpiderReferenceLookup';
+import type { SpiderSymbolService } from './spider/SpiderSymbolService';
 import type { Dependency, IndexingProgressCallback, SpiderConfig } from '../foundation/types';
-import { YIELD_INTERVAL_MS, yieldToEventLoop } from '../utils/EventLoopYield';
-import { PathResolver } from '../source/PathResolver';
+import type { PathResolver } from '../source/PathResolver';
 import type { SpiderServices } from './SpiderServices';
 
 /**
@@ -119,7 +112,6 @@ import type { SpiderServices } from './SpiderServices';
 export class Spider {
   private readonly config: SpiderConfig;
 
-  private readonly languageService: LanguageService;
   private readonly resolver: PathResolver;
 
   // Kept as `cache` for backward compatibility (some tests/tools access it dynamically).
@@ -128,17 +120,12 @@ export class Spider {
     symbols: import('../foundation/types').SymbolInfo[];
     dependencies: import('../foundation/types').SymbolDependency[];
   }>;
-  private readonly fileReader: FileReader;
   private readonly astWorkerHost: AstWorkerHost;
 
   private readonly reverseIndexManager: ReverseIndexManager;
   private readonly indexerStatus: IndexerStatus;
-  private readonly workerManager: SpiderWorkerManager;
-  private readonly cancellation: SpiderIndexingCancellation;
 
   private readonly sourceFileCollector: SourceFileCollector;
-  private readonly referencingFilesFinder: ReferencingFilesFinder;
-  private readonly symbolDependencyHelper: SymbolDependencyHelper;
 
   private readonly dependencyAnalyzer: SpiderDependencyAnalyzer;
   private readonly referenceLookup: SpiderReferenceLookup;
@@ -177,136 +164,23 @@ export class Spider {
    * });
    * ```
    * 
-   * @param configOrServices - Either a SpiderConfig (legacy) or fully initialized SpiderServices (used by SpiderBuilder)
+   * @param services - Fully initialized SpiderServices (constructed by {@link SpiderBuilder})
    */
-  constructor(configOrServices: SpiderConfig | SpiderServices) {
-    // Check if we received SpiderServices (has dependencyAnalyzer property) or SpiderConfig
-    if ('dependencyAnalyzer' in configOrServices) {
-      // SpiderServices path (used by SpiderBuilder)
-      const services = configOrServices;
-      this.config = services.config;
-      this.languageService = services.languageService;
-      this.resolver = services.resolver;
-      this.cache = services.cache;
-      this.symbolCache = services.symbolCache;
-      this.fileReader = services.fileReader;
-      this.astWorkerHost = services.astWorkerHost;
-      this.reverseIndexManager = services.reverseIndexManager;
-      this.indexerStatus = services.indexerStatus;
-      this.workerManager = services.workerManager;
-      this.cancellation = services.cancellation;
-      this.sourceFileCollector = services.sourceFileCollector;
-      this.referencingFilesFinder = services.referencingFilesFinder;
-      this.symbolDependencyHelper = services.symbolDependencyHelper;
-      this.dependencyAnalyzer = services.dependencyAnalyzer;
-      this.referenceLookup = services.referenceLookup;
-      this.symbolService = services.symbolService;
-      this.graphCrawler = services.graphCrawler;
-      this.indexingService = services.indexingService;
-      this.cacheCoordinator = services.cacheCoordinator;
-    } else {
-      // SpiderConfig path (backward compatibility - initialize services inline)
-      const config = configOrServices;
-      
-      // Apply defaults
-      this.config = {
-        maxDepth: 50,
-        excludeNodeModules: true,
-        enableReverseIndex: false,
-        indexingConcurrency: 4,
-        maxCacheSize: 500,
-        maxSymbolCacheSize: 200,
-        maxSymbolAnalyzerFiles: 100,
-        ...config,
-      };
-
-      // Initialize services in dependency order
-      this.languageService = new LanguageService(
-        config.rootDir,
-        config.tsConfigPath,
-        config.extensionPath
-      );
-      this.resolver = new PathResolver(config.tsConfigPath, this.config.excludeNodeModules, config.rootDir);
-      this.cache = new Cache({ maxSize: this.config.maxCacheSize, enableLRU: true });
-      this.symbolCache = new Cache({ maxSize: this.config.maxSymbolCacheSize, enableLRU: true });
-      this.astWorkerHost = new AstWorkerHost(undefined, config.extensionPath);
-      this.reverseIndexManager = new ReverseIndexManager(this.config.rootDir);
-      this.fileReader = new FileReader();
-      this.indexerStatus = new IndexerStatus();
-      this.cancellation = new SpiderIndexingCancellation();
-
-      this.workerManager = new SpiderWorkerManager(this.indexerStatus, this.reverseIndexManager, this.cache);
-      this.dependencyAnalyzer = new SpiderDependencyAnalyzer(
-        this.languageService,
-        this.resolver,
-        this.cache,
-        this.reverseIndexManager
-      );
-      this.sourceFileCollector = new SourceFileCollector({
-        excludeNodeModules: this.config.excludeNodeModules ?? true,
-        yieldIntervalMs: YIELD_INTERVAL_MS,
-        yieldCallback: () => yieldToEventLoop(),
-        isCancelled: () => this.cancellation.isCancelled(),
-      });
-
-      this.referenceLookup = new SpiderReferenceLookup(
-        this.reverseIndexManager,
-        this.dependencyAnalyzer,
-        this.fileReader,
-        () => this.indexerStatus.isReady(),
-        () => this.indexerStatus.isActive()
-      );
-      this.referencingFilesFinder = new ReferencingFilesFinder({
-        sourceFileCollector: this.sourceFileCollector,
-        getRootDir: () => this.config.rootDir,
-        getConcurrency: () => this.config.indexingConcurrency,
-        findReferenceInFile: (filePath, normalizedTargetPath, targetBasename) =>
-          this.referenceLookup.findReferenceInFile(filePath, normalizedTargetPath, targetBasename),
-      });
-      this.referenceLookup.setFallbackFinder(this.referencingFilesFinder);
-
-      this.symbolDependencyHelper = new SymbolDependencyHelper({
-        resolve: async (from, to) => {
-          try {
-            return await this.resolver.resolve(from, to);
-          } catch {
-            return null;
-          }
-        },
-      });
-
-      this.symbolService = new SpiderSymbolService(
-        this.astWorkerHost,
-        this.symbolCache,
-        this.fileReader,
-        this.resolver,
-        this.symbolDependencyHelper,
-        () => this.config,
-        (targetPath) => this.findReferencingFiles(targetPath),
-        this.languageService
-      );
-
-      this.graphCrawler = new SpiderGraphCrawler(this.dependencyAnalyzer, () => this.config);
-
-      this.indexingService = new SpiderIndexingService(
-        this.dependencyAnalyzer,
-        this.cache,
-        this.reverseIndexManager,
-        this.sourceFileCollector,
-        this.indexerStatus,
-        this.workerManager,
-        this.cancellation,
-        () => this.config,
-        () => yieldToEventLoop(),
-        (filePath) => this.symbolService.getSymbolGraph(filePath)
-      );
-
-      this.cacheCoordinator = new SpiderCacheCoordinator(this.cache, this.symbolCache, this.reverseIndexManager);
-
-      if (config.enableReverseIndex) {
-        this.enableReverseIndex();
-      }
-    }
+  constructor(services: SpiderServices) {
+    this.config = services.config;
+    this.resolver = services.resolver;
+    this.cache = services.cache;
+    this.symbolCache = services.symbolCache;
+    this.astWorkerHost = services.astWorkerHost;
+    this.reverseIndexManager = services.reverseIndexManager;
+    this.indexerStatus = services.indexerStatus;
+    this.sourceFileCollector = services.sourceFileCollector;
+    this.dependencyAnalyzer = services.dependencyAnalyzer;
+    this.referenceLookup = services.referenceLookup;
+    this.symbolService = services.symbolService;
+    this.graphCrawler = services.graphCrawler;
+    this.indexingService = services.indexingService;
+    this.cacheCoordinator = services.cacheCoordinator;
   }
 
   /**
