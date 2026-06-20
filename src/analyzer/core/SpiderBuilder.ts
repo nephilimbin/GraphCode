@@ -42,206 +42,6 @@ import type { SpiderConfig } from '../foundation/types';
  * await spider.dispose();
  * ```
  * 
- * @example Standard configuration
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/path/to/project')
- *   .withMaxDepth(50)
- *   .withReverseIndex(true)
- *   .withIndexingConcurrency(4)
- *   .build();
- * 
- * // Crawl dependency graph
- * const graph = await spider.crawl('src/app.ts');
- * console.log(`Found ${graph.nodes.length} files, ${graph.edges.length} dependencies`);
- * ```
- * 
- * ## Advanced Configuration
- * 
- * @example High-performance configuration
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/path/to/large-project')
- *   .withTsConfigPath('./tsconfig.json')
- *   .withMaxDepth(100)
- *   .withExcludeNodeModules(true)
- *   .withReverseIndex(true)
- *   .withIndexingConcurrency(8)
- *   .withCacheConfig({
- *     maxCacheSize: 2000,
- *     maxSymbolCacheSize: 1000,
- *     maxSymbolAnalyzerFiles: 500
- *   })
- *   .build();
- * 
- * // Build full index with progress tracking
- * await spider.buildFullIndex((progress) => {
- *   console.log(`Progress: ${progress.completed}/${progress.total} files`);
- * });
- * ```
- * 
- * @example Low-memory configuration
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/path/to/project')
- *   .withMaxDepth(30)
- *   .withReverseIndex(false)
- *   .withIndexingConcurrency(2)
- *   .withCacheConfig({
- *     maxCacheSize: 100,
- *     maxSymbolCacheSize: 50,
- *     maxSymbolAnalyzerFiles: 25
- *   })
- *   .build();
- * ```
- * 
- * @example Bulk configuration from SpiderConfig
- * ```typescript
- * const config: SpiderConfig = {
- *   rootDir: '/path/to/project',
- *   maxDepth: 50,
- *   enableReverseIndex: true,
- *   indexingConcurrency: 4
- * };
- * 
- * const spider = new SpiderBuilder()
- *   .withConfig(config)
- *   .build();
- * ```
- * 
- * ## Testing Scenarios
- * 
- * @example Unit testing with mock services
- * ```typescript
- * import { vi } from 'vitest';
- * 
- * const mockCache = new Cache({ maxSize: 10 });
- * const mockLanguageService = {
- *   getLanguage: vi.fn().mockReturnValue('typescript'),
- *   // ... other methods
- * };
- * 
- * const spider = new SpiderBuilder()
- *   .withRootDir('/test/project')
- *   .withCache(mockCache)
- *   .withLanguageService(mockLanguageService)
- *   .build();
- * 
- * // Test with controlled dependencies
- * await spider.analyze('test.ts');
- * expect(mockLanguageService.getLanguage).toHaveBeenCalled();
- * ```
- * 
- * @example Integration testing with minimal setup
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/test/fixtures/sample-project')
- *   .withMaxDepth(10)
- *   .withExcludeNodeModules(true)
- *   .build();
- * 
- * const graph = await spider.crawl('src/index.ts');
- * expect(graph.nodes).toContain('src/utils.ts');
- * 
- * await spider.dispose();
- * ```
- * 
- * @example Testing with custom cache for verification
- * ```typescript
- * const cache = new Cache({ maxSize: 100 });
- * 
- * const spider = new SpiderBuilder()
- *   .withRootDir('/test/project')
- *   .withCache(cache)
- *   .build();
- * 
- * await spider.analyze('file1.ts');
- * await spider.analyze('file1.ts'); // Should hit cache
- * 
- * const stats = cache.getStats();
- * expect(stats.hits).toBe(1);
- * expect(stats.misses).toBe(1);
- * ```
- * 
- * ## Migration Guide
- * 
- * ### From Direct Spider Constructor
- * 
- * **Before (legacy approach):**
- * ```typescript
- * const spider = new Spider({
- *   rootDir: '/path/to/project',
- *   maxDepth: 50,
- *   enableReverseIndex: true,
- *   indexingConcurrency: 4
- * });
- * ```
- * 
- * **After (recommended approach):**
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/path/to/project')
- *   .withMaxDepth(50)
- *   .withReverseIndex(true)
- *   .withIndexingConcurrency(4)
- *   .build();
- * ```
- * 
- * ### Benefits of Migration
- * 
- * 1. **Type Safety**: Fluent API provides better IDE autocomplete and type checking
- * 2. **Validation**: Configuration errors caught before service initialization
- * 3. **Testability**: Easy dependency injection via `with*` methods
- * 4. **Clarity**: Self-documenting configuration with method names
- * 5. **Flexibility**: Mix fluent API with bulk configuration as needed
- * 
- * ### Gradual Migration
- * 
- * You can migrate gradually by using `withConfig()` with existing SpiderConfig objects:
- * 
- * ```typescript
- * // Step 1: Use existing config with builder
- * const spider = new SpiderBuilder()
- *   .withConfig(existingConfig)
- *   .build();
- * 
- * // Step 2: Gradually replace with fluent API
- * const spider = new SpiderBuilder()
- *   .withConfig(existingConfig)
- *   .withMaxDepth(100) // Override specific options
- *   .build();
- * 
- * // Step 3: Full fluent API
- * const spider = new SpiderBuilder()
- *   .withRootDir(existingConfig.rootDir)
- *   .withMaxDepth(100)
- *   .withReverseIndex(true)
- *   .build();
- * ```
- * 
- * ## Error Handling
- * 
- * @example Validation errors
- * ```typescript
- * try {
- *   const spider = new SpiderBuilder()
- *     // Missing rootDir
- *     .withMaxDepth(50)
- *     .build();
- * } catch (error) {
- *   console.error(error.message); // "rootDir is required"
- * }
- * 
- * try {
- *   const spider = new SpiderBuilder()
- *     .withRootDir('/path/to/project')
- *     .withMaxDepth(-10) // Invalid value
- *     .build();
- * } catch (error) {
- *   console.error(error.message); // "maxDepth must be non-negative"
- * }
- * ```
- * 
  * @see {@link Spider} for the main analyzer class
  * @see {@link SpiderConfig} for configuration options
  */
@@ -266,13 +66,6 @@ export class SpiderBuilder {
    * 
    * @param rootDir - Absolute path to the project root directory
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .build();
-   * ```
    */
   withRootDir(rootDir: string): this {
     this.rootDir = rootDir;
@@ -287,14 +80,6 @@ export class SpiderBuilder {
    * 
    * @param tsConfigPath - Path to tsconfig.json (absolute or relative to rootDir)
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withTsConfigPath('./tsconfig.json')
-   *   .build();
-   * ```
    */
   withTsConfigPath(tsConfigPath: string): this {
     this.tsConfigPath = tsConfigPath;
@@ -309,14 +94,6 @@ export class SpiderBuilder {
    * 
    * @param extensionPath - Absolute path to the extension directory
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withExtensionPath(context.extensionPath)
-   *   .build();
-   * ```
    */
   withExtensionPath(extensionPath: string): this {
     this.extensionPath = extensionPath;
@@ -331,14 +108,6 @@ export class SpiderBuilder {
    * 
    * @param maxDepth - Maximum depth for graph traversal (must be non-negative)
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withMaxDepth(100) // Allow deeper traversal
-   *   .build();
-   * ```
    */
   withMaxDepth(maxDepth: number): this {
     this.maxDepth = maxDepth;
@@ -353,14 +122,6 @@ export class SpiderBuilder {
    * 
    * @param exclude - Whether to exclude node_modules from analysis
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withExcludeNodeModules(false) // Include node_modules
-   *   .build();
-   * ```
    */
   withExcludeNodeModules(exclude: boolean): this {
     this.excludeNodeModules = exclude;
@@ -375,17 +136,6 @@ export class SpiderBuilder {
    * 
    * @param enabled - Whether to enable reverse index
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withReverseIndex(true) // Enable fast reverse lookups
-   *   .build();
-   * 
-   * // Find all files that import 'utils.ts'
-   * const refs = await spider.findReferencingFiles('src/utils.ts');
-   * ```
    */
   withReverseIndex(enabled: boolean): this {
     this.enableReverseIndex = enabled;
@@ -400,14 +150,6 @@ export class SpiderBuilder {
    * 
    * @param concurrency - Number of parallel workers (must be at least 1)
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withIndexingConcurrency(8) // Use 8 parallel workers
-   *   .build();
-   * ```
    */
   withIndexingConcurrency(concurrency: number): this {
     this.indexingConcurrency = concurrency;
@@ -425,30 +167,6 @@ export class SpiderBuilder {
    * @param config.maxSymbolCacheSize - Symbol cache size (default: 200)
    * @param config.maxSymbolAnalyzerFiles - Symbol analyzer file limit (default: 100)
    * @returns This builder instance for method chaining
-   * 
-   * @example High-performance caching
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withCacheConfig({
-   *     maxCacheSize: 2000,
-   *     maxSymbolCacheSize: 1000,
-   *     maxSymbolAnalyzerFiles: 500
-   *   })
-   *   .build();
-   * ```
-   * 
-   * @example Low-memory caching
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withCacheConfig({
-   *     maxCacheSize: 100,
-   *     maxSymbolCacheSize: 50,
-   *     maxSymbolAnalyzerFiles: 25
-   *   })
-   *   .build();
-   * ```
    */
   withCacheConfig(config: {
     maxCacheSize?: number;
@@ -475,14 +193,6 @@ export class SpiderBuilder {
    * 
    * @param interval - Progress callback interval in milliseconds
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withIndexingProgressInterval(100) // Update every 100ms
-   *   .build();
-   * ```
    */
   withIndexingProgressInterval(interval: number): this {
     this.indexingProgressInterval = interval;
@@ -497,27 +207,6 @@ export class SpiderBuilder {
    * 
    * @param config - SpiderConfig object with configuration options
    * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const config: SpiderConfig = {
-   *   rootDir: '/path/to/project',
-   *   maxDepth: 50,
-   *   enableReverseIndex: true
-   * };
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withConfig(config)
-   *   .build();
-   * ```
-   * 
-   * @example Override specific options
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withConfig(baseConfig)
-   *   .withMaxDepth(100) // Override maxDepth from config
-   *   .build();
-   * ```
    */
   withConfig(config: SpiderConfig): this {
     this.rootDir = config.rootDir;
@@ -563,17 +252,6 @@ export class SpiderBuilder {
    * @returns Fully initialized Spider instance
    * @throws Error if required configuration is missing (rootDir)
    * @throws Error if configuration values are invalid (negative depths, etc.)
-   * 
-   * @example
-   * ```typescript
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withMaxDepth(50)
-   *   .build();
-   * 
-   * // Spider is ready to use
-   * const deps = await spider.analyze('src/index.ts');
-   * ```
    */
   build(): Spider {
     this.validate();
