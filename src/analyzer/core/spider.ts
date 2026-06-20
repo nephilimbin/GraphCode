@@ -18,77 +18,7 @@ import { SymbolDependencyHelper } from '../symbol/SymbolDependencyHelper';
 import type { Dependency, IndexingProgressCallback, SpiderConfig } from '../foundation/types';
 import { YIELD_INTERVAL_MS, yieldToEventLoop } from '../utils/EventLoopYield';
 import { PathResolver } from '../source/PathResolver';
-
-/**
- * Internal interface defining all services required by Spider.
- * This interface is used by SpiderBuilder to pass fully initialized services to Spider's constructor.
- * 
- * @internal
- */
-export interface SpiderServices {
-  /** Spider configuration object */
-  config: SpiderConfig;
-  
-  /** Language service for TypeScript/JavaScript analysis */
-  languageService: LanguageService;
-  
-  /** Path resolver for module resolution */
-  resolver: PathResolver;
-  
-  /** Cache for dependency analysis results */
-  cache: Cache<Dependency[]>;
-  
-  /** Cache for symbol analysis results */
-  symbolCache: Cache<{
-    symbols: import('../foundation/types').SymbolInfo[];
-    dependencies: import('../foundation/types').SymbolDependency[];
-  }>;
-  
-  /** File reader utility */
-  fileReader: FileReader;
-  
-  /** AST worker host for isolated ts-morph operations */
-  astWorkerHost: AstWorkerHost;
-  
-  /** Reverse index manager for O(1) reverse dependency lookups */
-  reverseIndexManager: ReverseIndexManager;
-  
-  /** Indexer status tracker */
-  indexerStatus: IndexerStatus;
-  
-  /** Worker manager for background indexing */
-  workerManager: SpiderWorkerManager;
-  
-  /** Cancellation token for indexing operations */
-  cancellation: SpiderIndexingCancellation;
-  
-  /** Source file collector for finding project files */
-  sourceFileCollector: SourceFileCollector;
-  
-  /** Finder for files that reference a target file */
-  referencingFilesFinder: ReferencingFilesFinder;
-  
-  /** Helper for resolving symbol dependencies */
-  symbolDependencyHelper: SymbolDependencyHelper;
-  
-  /** Core dependency analyzer */
-  dependencyAnalyzer: SpiderDependencyAnalyzer;
-  
-  /** Reference lookup service (handles circular dependency with referencingFilesFinder) */
-  referenceLookup: SpiderReferenceLookup;
-  
-  /** Symbol analysis service */
-  symbolService: SpiderSymbolService;
-  
-  /** Graph crawler for dependency graph traversal */
-  graphCrawler: SpiderGraphCrawler;
-  
-  /** Indexing service for background analysis */
-  indexingService: SpiderIndexingService;
-  
-  /** Cache coordinator for managing all caches */
-  cacheCoordinator: SpiderCacheCoordinator;
-}
+import type { SpiderServices } from './SpiderServices';
 
 /**
  * Main analyzer class - "The Spider"
