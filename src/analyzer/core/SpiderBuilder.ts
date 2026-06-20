@@ -278,14 +278,6 @@ export class SpiderBuilder {
   private maxSymbolAnalyzerFiles: number = 100;
   private indexingProgressInterval?: number;
 
-  // Service overrides (for testing)
-  private customCache?: Cache<Dependency[]>;
-  private customSymbolCache?: Cache<{ symbols: SymbolInfo[]; dependencies: SymbolDependency[] }>;
-  private customLanguageService?: LanguageService;
-  private customPathResolver?: PathResolver;
-  private customAstWorkerHost?: AstWorkerHost;
-  private customReverseIndexManager?: ReverseIndexManager;
-
   /**
    * Set the root directory (required).
    * 
@@ -582,165 +574,6 @@ export class SpiderBuilder {
   }
 
   /**
-   * Override cache for testing.
-   * 
-   * Allows injecting a custom cache instance for testing purposes. The provided cache
-   * will be used instead of creating a new one during Spider initialization.
-   * 
-   * @param cache - Custom cache instance for dependency analysis results
-   * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const mockCache = new Cache({ maxSize: 10 });
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/test/project')
-   *   .withCache(mockCache)
-   *   .build();
-   * 
-   * // Verify cache usage in tests
-   * await spider.analyze('test.ts');
-   * expect(mockCache.getStats().misses).toBe(1);
-   * ```
-   */
-  withCache(cache: Cache<Dependency[]>): this {
-    this.customCache = cache;
-    return this;
-  }
-
-  /**
-   * Override symbol cache for testing.
-   * 
-   * Allows injecting a custom symbol cache instance for testing purposes.
-   * 
-   * @param cache - Custom cache instance for symbol analysis results
-   * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const mockSymbolCache = new Cache({ maxSize: 10 });
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/test/project')
-   *   .withSymbolCache(mockSymbolCache)
-   *   .build();
-   * ```
-   */
-  withSymbolCache(cache: Cache<{ symbols: SymbolInfo[]; dependencies: SymbolDependency[] }>): this {
-    this.customSymbolCache = cache;
-    return this;
-  }
-
-  /**
-   * Override language service for testing.
-   * 
-   * Allows injecting a custom language service instance for testing purposes.
-   * Useful for mocking language detection and TypeScript analysis.
-   * 
-   * @param service - Custom language service instance
-   * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const mockLanguageService = {
-   *   getLanguage: vi.fn().mockReturnValue('typescript'),
-   *   // ... other methods
-   * };
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/test/project')
-   *   .withLanguageService(mockLanguageService)
-   *   .build();
-   * ```
-   */
-  withLanguageService(service: LanguageService): this {
-    this.customLanguageService = service;
-    return this;
-  }
-
-  /**
-   * Override path resolver for testing.
-   * 
-   * Allows injecting a custom path resolver instance for testing purposes.
-   * Useful for mocking module resolution behavior.
-   * 
-   * @param resolver - Custom path resolver instance
-   * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const mockResolver = {
-   *   resolve: vi.fn().mockResolvedValue('/resolved/path.ts'),
-   *   // ... other methods
-   * };
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/test/project')
-   *   .withPathResolver(mockResolver)
-   *   .build();
-   * ```
-   */
-  withPathResolver(resolver: PathResolver): this {
-    this.customPathResolver = resolver;
-    return this;
-  }
-
-  /**
-   * Override AST worker host for testing.
-   * 
-   * Allows injecting a custom AST worker host instance for testing purposes.
-   * Useful for mocking ts-morph operations.
-   * 
-   * @param host - Custom AST worker host instance
-   * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const mockAstWorkerHost = {
-   *   getSymbols: vi.fn().mockResolvedValue([]),
-   *   // ... other methods
-   * };
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/test/project')
-   *   .withAstWorkerHost(mockAstWorkerHost)
-   *   .build();
-   * ```
-   */
-  withAstWorkerHost(host: AstWorkerHost): this {
-    this.customAstWorkerHost = host;
-    return this;
-  }
-
-  /**
-   * Override reverse index manager for testing.
-   * 
-   * Allows injecting a custom reverse index manager instance for testing purposes.
-   * Useful for mocking reverse dependency lookups.
-   * 
-   * @param manager - Custom reverse index manager instance
-   * @returns This builder instance for method chaining
-   * 
-   * @example
-   * ```typescript
-   * const mockReverseIndexManager = {
-   *   getCallerCount: vi.fn().mockReturnValue(5),
-   *   // ... other methods
-   * };
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/test/project')
-   *   .withReverseIndexManager(mockReverseIndexManager)
-   *   .build();
-   * ```
-   */
-  withReverseIndexManager(manager: ReverseIndexManager): this {
-    this.customReverseIndexManager = manager;
-    return this;
-  }
-
-  /**
    * Build and return the Spider instance.
    * 
    * Validates configuration, initializes all services in the correct dependency order,
@@ -781,25 +614,20 @@ export class SpiderBuilder {
     const config = this.buildConfig();
 
     // Phase 1: Core services (no dependencies)
-    const languageService = this.customLanguageService ?? 
-      new LanguageService(this.rootDir!, this.tsConfigPath, this.extensionPath);
+    const languageService = new LanguageService(this.rootDir!, this.tsConfigPath, this.extensionPath);
     
-    const resolver = this.customPathResolver ?? 
-      new PathResolver(this.tsConfigPath, this.excludeNodeModules, this.rootDir!);
+    const resolver = new PathResolver(this.tsConfigPath, this.excludeNodeModules, this.rootDir!);
     
-    const cache = this.customCache ?? 
-      new Cache<Dependency[]>({ maxSize: this.maxCacheSize, enableLRU: true });
+    const cache = new Cache<Dependency[]>({ maxSize: this.maxCacheSize, enableLRU: true });
     
-    const symbolCache = this.customSymbolCache ?? 
-      new Cache<{ symbols: SymbolInfo[]; dependencies: SymbolDependency[] }>({ 
+    const symbolCache = new Cache<{ symbols: SymbolInfo[]; dependencies: SymbolDependency[] }>({ 
         maxSize: this.maxSymbolCacheSize, 
         enableLRU: true 
       });
     
-    const astWorkerHost = this.customAstWorkerHost ?? new AstWorkerHost(undefined, this.extensionPath);
+    const astWorkerHost = new AstWorkerHost(undefined, this.extensionPath);
     
-    const reverseIndexManager = this.customReverseIndexManager ?? 
-      new ReverseIndexManager(this.rootDir!);
+    const reverseIndexManager = new ReverseIndexManager(this.rootDir!);
     
     const fileReader = new FileReader();
     const indexerStatus = new IndexerStatus();
