@@ -53,3 +53,17 @@ export async function resolveWithExtensions(
 
   return null;
 }
+
+/**
+ * Whether an upward config-file search (tsconfig.json / package.json) should
+ * stop at the workspace boundary. Pure helper shared by the upward-searching
+ * resolvers (tsconfig / packageJson / workspace).
+ */
+export function shouldStopSearch(
+  workspaceRoot: string | undefined,
+  currentDir: string,
+): boolean {
+  return Boolean(
+    workspaceRoot && currentDir === path.dirname(workspaceRoot),
+  );
+}
