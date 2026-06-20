@@ -18,7 +18,7 @@ import { SpiderWorkerManager } from './spider/SpiderWorkerManager';
 import { SymbolDependencyHelper } from '../symbol/SymbolDependencyHelper';
 import type { Dependency, SpiderConfig, SymbolInfo, SymbolDependency } from '../foundation/types';
 import { YIELD_INTERVAL_MS, yieldToEventLoop } from '../utils/EventLoopYield';
-import { PathResolver } from '../utils/PathResolver';
+import { PathResolver } from '../source/PathResolver';
 
 /**
  * Builder for constructing Spider instances with a fluent API.

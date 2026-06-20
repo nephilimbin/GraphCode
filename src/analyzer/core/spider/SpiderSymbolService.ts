@@ -10,7 +10,7 @@ import { SymbolDependencyHelper } from '../../symbol/SymbolDependencyHelper';
 import type { Dependency, SpiderConfig, SymbolDependency, SymbolInfo } from '../../foundation/types';
 import { SpiderError, SpiderErrorCode, normalizePath } from '../../foundation/types';
 import { isInIgnoredDirectory } from '../../utils/PathPredicates';
-import { PathResolver } from '../../utils/PathResolver';
+import { PathResolver } from '../../source/PathResolver';
 
 const log = getLogger('SpiderSymbolService');
 

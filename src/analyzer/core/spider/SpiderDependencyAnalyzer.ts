@@ -1,5 +1,5 @@
 import { LanguageService } from '../../source/LanguageService';
-import { PathResolver } from '../../utils/PathResolver';
+import { PathResolver } from '../../source/PathResolver';
 import { Cache } from '../../indexing/Cache';
 import { ReverseIndex } from '../../indexing/ReverseIndex';
 import { ReverseIndexManager } from '../../indexing/ReverseIndexManager';
