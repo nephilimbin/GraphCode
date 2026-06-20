@@ -42,67 +42,6 @@ import type { SpiderServices } from './SpiderServices';
  * await spider.dispose();
  * ```
  *
- * @example Advanced configuration
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/path/to/project')
- *   .withTsConfigPath('./tsconfig.json')
- *   .withMaxDepth(100)
- *   .withExcludeNodeModules(true)
- *   .withReverseIndex(true)
- *   .withIndexingConcurrency(8)
- *   .withCacheConfig({
- *     maxCacheSize: 1000,
- *     maxSymbolCacheSize: 500,
- *     maxSymbolAnalyzerFiles: 200
- *   })
- *   .build();
- * ```
- *
- * @example Testing with custom services
- * ```typescript
- * const mockCache = new Cache({ maxSize: 10 });
- * const mockLanguageService = createMockLanguageService();
- * 
- * const spider = new SpiderBuilder()
- *   .withRootDir('/test/project')
- *   .withCache(mockCache)
- *   .withLanguageService(mockLanguageService)
- *   .build();
- * ```
- *
- * @example Symbol-level analysis
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/path/to/project')
- *   .build();
- * 
- * // Get symbol graph for a file
- * const { symbols, dependencies } = await spider.getSymbolGraph('src/utils.ts');
- * 
- * // Find unused symbols
- * const unused = await spider.findUnusedSymbols('src/utils.ts');
- * 
- * // Trace function execution
- * const trace = await spider.traceFunctionExecution('src/app.ts', 'handleRequest', 10);
- * ```
- *
- * @example Background indexing
- * ```typescript
- * const spider = new SpiderBuilder()
- *   .withRootDir('/path/to/project')
- *   .withReverseIndex(true)
- *   .withIndexingConcurrency(4)
- *   .build();
- * 
- * // Build full index with progress callback
- * const result = await spider.buildFullIndex((progress) => {
- *   console.log(`Indexed ${progress.completed}/${progress.total} files`);
- * });
- * 
- * console.log(`Indexed ${result.indexedFiles} files in ${result.duration}ms`);
- * ```
- *
  * CRITICAL ARCHITECTURE RULE: This module is completely VS Code agnostic!
  * NO import * as vscode from 'vscode' allowed!
  * Only Node.js built-in modules (fs, path) are permitted (indirectly via services).
@@ -141,28 +80,6 @@ export class Spider {
    * Use {@link SpiderBuilder} instead for a fluent, type-safe configuration API.
    * 
    * @internal
-   * 
-   * @example Recommended approach (use SpiderBuilder)
-   * ```typescript
-   * import { SpiderBuilder } from './SpiderBuilder';
-   * 
-   * const spider = new SpiderBuilder()
-   *   .withRootDir('/path/to/project')
-   *   .withMaxDepth(50)
-   *   .withReverseIndex(true)
-   *   .build();
-   * ```
-   * 
-   * @example Legacy approach (backward compatibility only)
-   * ```typescript
-   * // Direct construction is supported for backward compatibility
-   * // but SpiderBuilder is strongly recommended for new code
-   * const spider = new Spider({
-   *   rootDir: '/path/to/project',
-   *   maxDepth: 50,
-   *   enableReverseIndex: true
-   * });
-   * ```
    * 
    * @param services - Fully initialized SpiderServices (constructed by {@link SpiderBuilder})
    */
