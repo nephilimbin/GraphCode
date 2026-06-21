@@ -12,7 +12,7 @@
  */
 
 import type { Database } from "sql.js";
-import type { RelationType, SupportedLang, SymbolType } from "../foundation/callgraph-types";
+import type { RelationType, SupportedLang, SymbolType } from "../foundation/callgraphTypes";
 import { resolveWasmFile } from "../foundation/wasmResolver";
 import { DatabaseManager } from "./DatabaseManager";
 import { FileIndexer } from "./FileIndexer";

@@ -19,7 +19,7 @@ import type {
   SerializedCompoundNode,
   SupportedLang,
   SymbolType,
-} from "../foundation/callgraph-types";
+} from "../foundation/callgraphTypes";
 import type { Database } from "sql.js";
 
 // ---------------------------------------------------------------------------

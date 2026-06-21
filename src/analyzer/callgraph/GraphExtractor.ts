@@ -23,7 +23,7 @@
  */
 
 import { WasmParserFactory } from "@/analyzer/languages/WasmParserFactory";
-import type { RelationType, SupportedLang, SymbolType } from "../foundation/callgraph-types";
+import type { RelationType, SupportedLang, SymbolType } from "../foundation/callgraphTypes";
 import { getLogger } from "../foundation/logger";
 import { normalizePath } from "../foundation/path";
 import { resolveQueryFile, resolveWasmFile } from "../foundation/wasmResolver";

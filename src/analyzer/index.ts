@@ -57,7 +57,7 @@ export type {
   SerializedCallNode,
   SerializedCallEdge,
   SerializedCompoundNode,
-} from "./foundation/callgraph-types";
+} from "./foundation/callgraphTypes";
 
 // ---------------------------------------------------------------------------
 // SDK 集成辅助(超出 ADR §3.3 核心契约,供集成方诊断 / 自定义资源定位)

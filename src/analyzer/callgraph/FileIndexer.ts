@@ -7,7 +7,7 @@
  *
  * SPEC: specs/001-live-call-graph/data-model.md
  */
-import type { SupportedLang } from "../foundation/callgraph-types";
+import type { SupportedLang } from "../foundation/callgraphTypes";
 import type { DatabaseManager } from "./DatabaseManager";
 import type { CallGraphEdge, CallGraphNode } from "./CallGraphIndexer";
 
