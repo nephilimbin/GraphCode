@@ -17,7 +17,7 @@ import { SpiderSymbolService } from './spider/SpiderSymbolService';
 import { SpiderWorkerManager } from './spider/SpiderWorkerManager';
 import { SymbolDependencyHelper } from '../symbol/SymbolDependencyHelper';
 import type { Dependency, SpiderConfig, SymbolDependency, SymbolInfo } from '../foundation/types';
-import { YIELD_INTERVAL_MS, yieldToEventLoop } from '../utils/EventLoopYield';
+import { YIELD_INTERVAL_MS, yieldToEventLoop } from '../utils/eventLoopYield';
 import type { SpiderServices } from './SpiderServices';
 
 /**
