@@ -1,5 +1,5 @@
 import { Node } from "web-tree-sitter";
-import { SymbolDependency, SymbolInfo } from '../foundation/types';
+import { SymbolInfo } from '../foundation/types';
 import { WasmBaseSymbolAnalyzer } from './WasmBaseSymbolAnalyzer';
 
 /**
@@ -216,27 +216,7 @@ export class PythonSymbolAnalyzer extends WasmBaseSymbolAnalyzer {
     }
   }
 
-  /**
-   * Extract symbol dependencies from AST
-   */
-  protected extractDependencies(
-    node: Node,
-    filePath: string,
-    content: string,
-    dependencies: SymbolDependency[],
-    symbols: Map<string, SymbolInfo>,
-    currentScope?: string,
-    importMap?: Map<string, string>
-  ): void {
-    const newScope = this.getScopeForNode(node, filePath, content, currentScope);
-    this.addCallDependencyIfAny(node, filePath, content, dependencies, symbols, newScope, importMap);
-
-    for (const child of node.children) {
-      this.extractDependencies(child, filePath, content, dependencies, symbols, newScope, importMap);
-    }
-  }
-
-  private getScopeForNode(
+  protected getScopeForNode(
     node: Node,
     filePath: string,
     content: string,
@@ -255,51 +235,19 @@ export class PythonSymbolAnalyzer extends WasmBaseSymbolAnalyzer {
     return `${filePath}:${name}`;
   }
 
-  private addCallDependencyIfAny(
-    node: Node,
-    filePath: string,
-    content: string,
-    dependencies: SymbolDependency[],
-    symbols: Map<string, SymbolInfo>,
-    scope?: string,
-    importMap?: Map<string, string>
-  ): void {
-    if (node.type !== 'call') {
-      return;
-    }
+  protected isCallExpression(node: Node): boolean {
+    return node.type === 'call';
+  }
 
-    const funcNode = node.childForFieldName('function');
-    if (!funcNode || !scope) {
-      return;
-    }
+  protected extractCallCallee(node: Node): Node | null {
+    return node.childForFieldName('function');
+  }
 
-    const calledName = this.getCalledName(funcNode, content);
-
-    // Check if it's a call to a local symbol (same file)
-    const localTargetSymbolId = `${filePath}:${calledName}`;
-    if (symbols.has(localTargetSymbolId)) {
-      dependencies.push({
-        sourceSymbolId: scope,
-        targetSymbolId: localTargetSymbolId,
-        targetFilePath: filePath,
-        isTypeOnly: false,
-      });
-      return;
-    }
-
-    // Check if it's a call to an imported symbol (external file)
-    if (importMap?.has(calledName)) {
-      const moduleSpecifier = importMap.get(calledName);
-      if (moduleSpecifier === undefined) return;
-      // Create dependency with module specifier as targetFilePath
-      // This will be resolved to absolute path by SpiderSymbolService.getSymbolGraph()
-      dependencies.push({
-        sourceSymbolId: scope,
-        targetSymbolId: `${moduleSpecifier}:${calledName}`, // Module specifier + symbol name
-        targetFilePath: moduleSpecifier, // Will be resolved by PathResolver
-        isTypeOnly: false,
-      });
-    }
+  protected extractCallTarget(funcNode: Node, content: string): {
+    calledName: string;
+    moduleQualifier?: string;
+  } {
+    return { calledName: this.getCalledName(funcNode, content) };
   }
 
   private getCalledName(funcNode: Node, content: string): string {

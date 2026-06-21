@@ -1,5 +1,5 @@
 import { Node } from "web-tree-sitter";
-import { SymbolDependency, SymbolInfo } from '../foundation/types';
+import { SymbolInfo } from '../foundation/types';
 import { WasmBaseSymbolAnalyzer } from './WasmBaseSymbolAnalyzer';
 
 /**
@@ -341,27 +341,7 @@ export class RustSymbolAnalyzer extends WasmBaseSymbolAnalyzer {
     }
   }
 
-  /**
-   * Extract symbol dependencies from AST
-   */
-  protected extractDependencies(
-    node: Node,
-    filePath: string,
-    content: string,
-    dependencies: SymbolDependency[],
-    symbols: Map<string, SymbolInfo>,
-    currentScope?: string,
-    importMap?: Map<string, string>
-  ): void {
-    const newScope = this.getScopeForNode(node, filePath, content, currentScope);
-    this.addCallDependencyIfAny(node, filePath, content, dependencies, symbols, newScope, importMap);
-
-    for (const child of node.children) {
-      this.extractDependencies(child, filePath, content, dependencies, symbols, newScope, importMap);
-    }
-  }
-
-  private getScopeForNode(
+  protected getScopeForNode(
     node: Node,
     filePath: string,
     content: string,
@@ -380,67 +360,21 @@ export class RustSymbolAnalyzer extends WasmBaseSymbolAnalyzer {
     return `${filePath}:${name}`;
   }
 
-  private addCallDependencyIfAny(
-    node: Node,
-    filePath: string,
-    content: string,
-    dependencies: SymbolDependency[],
-    symbols: Map<string, SymbolInfo>,
-    scope?: string,
-    importMap?: Map<string, string>
-  ): void {
-    if (node.type !== 'call_expression') {
-      return;
-    }
+  protected isCallExpression(node: Node): boolean {
+    return node.type === 'call_expression';
+  }
 
-    const funcNode = node.childForFieldName('function');
-    if (!funcNode || !scope) {
-      return;
-    }
+  protected extractCallCallee(node: Node): Node | null {
+    return node.childForFieldName('function');
+  }
 
-    // For Rust, we need to handle qualified calls like module::function()
-    // Extract both the module prefix and the function name
+  protected extractCallTarget(funcNode: Node, content: string): {
+    calledName: string;
+    moduleQualifier?: string;
+  } {
+    // Rust 限定调用 module::fn:moduleName 作为 moduleQualifier,symbolName 作为 calledName。
     const { moduleName, symbolName } = this.extractModuleAndSymbolName(funcNode, content);
-
-    // Check if it's a call to a local symbol (same file)
-    const localTargetSymbolId = `${filePath}:${symbolName}`;
-    if (symbols.has(localTargetSymbolId)) {
-      dependencies.push({
-        sourceSymbolId: scope,
-        targetSymbolId: localTargetSymbolId,
-        targetFilePath: filePath,
-        isTypeOnly: false,
-      });
-      return;
-    }
-
-    // Check if it's a call to an imported symbol (external file)
-    // For qualified calls like helper::format_data, check if module is imported
-    if (moduleName && importMap?.has(moduleName)) {
-      const moduleSpecifier = importMap.get(moduleName);
-      if (moduleSpecifier === undefined) return;
-      // Create dependency with module specifier as targetFilePath
-      // This will be resolved to absolute path by SpiderSymbolService.getSymbolGraph()
-      dependencies.push({
-        sourceSymbolId: scope,
-        targetSymbolId: `${moduleSpecifier}:${symbolName}`, // Module specifier + symbol name
-        targetFilePath: moduleSpecifier, // Will be resolved by PathResolver
-        isTypeOnly: false,
-      });
-      return;
-    }
-
-    // For unqualified calls, check if the symbol name itself is in the import map
-    if (importMap?.has(symbolName)) {
-      const moduleSpecifier = importMap.get(symbolName);
-      if (moduleSpecifier === undefined) return;
-      dependencies.push({
-        sourceSymbolId: scope,
-        targetSymbolId: `${moduleSpecifier}:${symbolName}`,
-        targetFilePath: moduleSpecifier,
-        isTypeOnly: false,
-      });
-    }
+    return { calledName: symbolName, moduleQualifier: moduleName };
   }
 
   /**

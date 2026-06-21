@@ -10,12 +10,15 @@ import { resolveWasmFile } from '../foundation/wasmResolver';
  *
  * Rust / Swift / Python 三个分析器共享同一套流程:WASM 懒初始化 → 解析源码 →
  * 抽取符号 → 构建 import 映射 → 抽取符号级依赖。本基类以模板方法固化这套公共
- * 骨架(含 ISymbolAnalyzer 契约与 AstWorker 依赖的 analyzeFileContent),语言
- * 特有差异由子类注入:
+ * 骨架(含 ISymbolAnalyzer 契约、AstWorker 依赖的 analyzeFileContent,以及依赖
+ * 提取的递归遍历 + 调用依赖两路检测),语言特有差异由子类注入:
  * - {@link languageConfig}:WASM 初始化与错误消息所需的语言标识。
  * - {@link tryExtractSymbolFromNode}:识别并处理语言特定的符号声明节点。
- * - {@link buildImportMap} / {@link extractDependencies}:import 映射构建与依赖
- *   提取(实现留在子类,scope/调用检测等可后续进一步上提)。
+ * - {@link buildImportMap}:import 映射构建(语法各异,留子类)。
+ * - {@link getScopeForNode}:作用域定义节点的识别(语法各异,留子类)。
+ * - {@link isCallExpression} / {@link extractCallCallee} / {@link extractCallTarget}:
+ *   调用表达式识别与被调用方解析(calledName + 可选 moduleQualifier,Rust 用后者)。
+ * - {@link collectExtraDependencies}:可选钩子,默认空;Swift override 追加类型依赖。
  *
  * TS 的 SymbolAnalyzer 使用 ts-morph(另一套 AST 栈),不继承本类。
  */
@@ -200,8 +203,11 @@ export abstract class WasmBaseSymbolAnalyzer implements ISymbolAnalyzer {
   /** 构建 localName → moduleSpecifier 映射;由子类按语言 import 语法实现。 */
   protected abstract buildImportMap(node: Node, content: string): Map<string, string>;
 
-  /** 提取符号级依赖(内部 + 外部);由子类按语言调用/作用域规则实现。 */
-  protected abstract extractDependencies(
+  /**
+   * 提取符号级依赖:递归遍历 AST,跟踪作用域,检测调用依赖(本地符号 / 外部
+   * importMap 命中)及子类追加的额外依赖(如 Swift 类型引用)。
+   */
+  protected extractDependencies(
     node: Node,
     filePath: string,
     content: string,
@@ -209,7 +215,119 @@ export abstract class WasmBaseSymbolAnalyzer implements ISymbolAnalyzer {
     symbols: Map<string, SymbolInfo>,
     currentScope?: string,
     importMap?: Map<string, string>
-  ): void;
+  ): void {
+    const newScope = this.getScopeForNode(node, filePath, content, currentScope);
+    this.addCallDependencyIfAny(node, filePath, content, dependencies, symbols, newScope, importMap);
+    this.collectExtraDependencies(node, filePath, content, dependencies, symbols, newScope, importMap);
+
+    for (const child of node.children) {
+      this.extractDependencies(child, filePath, content, dependencies, symbols, newScope, importMap);
+    }
+  }
+
+  /** 计算节点所处作用域的符号 id;由子类按语言的"作用域定义节点"规则实现。 */
+  protected abstract getScopeForNode(
+    node: Node,
+    filePath: string,
+    content: string,
+    currentScope?: string
+  ): string | undefined;
+
+  /**
+   * 检测调用依赖:先查本地符号(同文件),再查 importMap(外部)。Rust 的限定
+   * 调用(`module::fn`)经 moduleQualifier 先查模块,再按符号名兜底。
+   */
+  protected addCallDependencyIfAny(
+    node: Node,
+    filePath: string,
+    content: string,
+    dependencies: SymbolDependency[],
+    symbols: Map<string, SymbolInfo>,
+    scope?: string,
+    importMap?: Map<string, string>
+  ): void {
+    if (!this.isCallExpression(node) || !scope) {
+      return;
+    }
+
+    const funcNode = this.extractCallCallee(node);
+    if (!funcNode) {
+      return;
+    }
+    const target = this.extractCallTarget(funcNode, content);
+
+    // Check if it's a call to a local symbol (same file)
+    const localTargetSymbolId = `${filePath}:${target.calledName}`;
+    if (symbols.has(localTargetSymbolId)) {
+      dependencies.push({
+        sourceSymbolId: scope,
+        targetSymbolId: localTargetSymbolId,
+        targetFilePath: filePath,
+        isTypeOnly: false,
+      });
+      return;
+    }
+
+    // Check if it's a call to an imported symbol (external file).
+    // For qualified calls (e.g. Rust `helper::format_data`), resolve via the
+    // module qualifier first; otherwise fall back to the bare symbol name.
+    if (target.moduleQualifier && importMap?.has(target.moduleQualifier)) {
+      const moduleSpecifier = importMap.get(target.moduleQualifier);
+      if (moduleSpecifier !== undefined) {
+        // Create dependency with module specifier as targetFilePath
+        // This will be resolved to absolute path by SpiderSymbolService.getSymbolGraph()
+        dependencies.push({
+          sourceSymbolId: scope,
+          targetSymbolId: `${moduleSpecifier}:${target.calledName}`, // Module specifier + symbol name
+          targetFilePath: moduleSpecifier, // Will be resolved by PathResolver
+          isTypeOnly: false,
+        });
+        return;
+      }
+    }
+
+    if (importMap?.has(target.calledName)) {
+      const moduleSpecifier = importMap.get(target.calledName);
+      if (moduleSpecifier === undefined) return;
+      dependencies.push({
+        sourceSymbolId: scope,
+        targetSymbolId: `${moduleSpecifier}:${target.calledName}`,
+        targetFilePath: moduleSpecifier,
+        isTypeOnly: false,
+      });
+    }
+  }
+
+  /** 判断节点是否为调用表达式(Python: 'call';Rust/Swift: 'call_expression')。 */
+  protected abstract isCallExpression(node: Node): boolean;
+
+  /** 从调用表达式节点提取被调用方节点。 */
+  protected abstract extractCallCallee(node: Node): Node | null;
+
+  /**
+   * 从被调用方节点解析调用目标:符号名 + 可选模块限定名。Rust 的限定调用
+   * (`module::fn`)返回 moduleQualifier;Python/Swift 仅返回 calledName。
+   */
+  protected abstract extractCallTarget(funcNode: Node, content: string): {
+    calledName: string;
+    moduleQualifier?: string;
+  };
+
+  /**
+   * 除调用依赖外的额外依赖(如 Swift 的类型引用);默认空实现,Rust/Python
+   * 无需 override,Swift override 以追加类型依赖。
+   */
+  protected collectExtraDependencies(
+    _node: Node,
+    _filePath: string,
+    _content: string,
+    _dependencies: SymbolDependency[],
+    _symbols: Map<string, SymbolInfo>,
+    _scope?: string,
+    _importMap?: Map<string, string>
+  ): void {
+    // 默认无额外依赖;子类按需 override。
+  }
 
   protected getNodeText(node: Node, content: string): string {
     return content.slice(node.startIndex, node.endIndex);
