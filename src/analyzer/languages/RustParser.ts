@@ -4,7 +4,7 @@ import { Node, Parser } from "web-tree-sitter";
 import { normalizePath } from "../foundation/path";
 import { FileReader } from "../source/FileReader";
 import { Dependency, ILanguageAnalyzer, SpiderError } from "../foundation/types";
-import { extractFilePath } from "../utils/PathExtractor";
+import { extractFilePath } from "../utils/pathExtractor";
 import { WasmParserFactory } from "./WasmParserFactory";
 import { resolveWasmFile } from "../foundation/wasmResolver";
 

@@ -11,7 +11,7 @@ import { RustSymbolAnalyzer } from "../languages/RustSymbolAnalyzer";
 import { SwiftParser } from "../languages/SwiftParser";
 import { SwiftSymbolAnalyzer } from "../languages/SwiftSymbolAnalyzer";
 import { ILanguageAnalyzer, ISymbolAnalyzer } from "../foundation/types";
-import { extractFilePath } from "../utils/PathExtractor";
+import { extractFilePath } from "../utils/pathExtractor";
 
 /**
  * Language detection based on file extension
