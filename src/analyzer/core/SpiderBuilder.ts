@@ -1,4 +1,4 @@
-import { Spider } from './spider';
+import { Spider } from './Spider';
 import { createSpiderServices } from './SpiderServicesFactory';
 import type { SpiderConfig } from '../foundation/types';
 

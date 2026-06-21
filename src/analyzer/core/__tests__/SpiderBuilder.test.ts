@@ -11,7 +11,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { SpiderBuilder } from "../SpiderBuilder";
-import { Spider } from "../spider";
+import { Spider } from "../Spider";
 
 describe("SpiderBuilder", () => {
   describe("fluent 配置收集", () => {

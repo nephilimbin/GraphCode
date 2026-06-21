@@ -18,7 +18,7 @@
 // ---------------------------------------------------------------------------
 
 // 引擎主门面
-export { Spider } from "./core/spider";
+export { Spider } from "./core/Spider";
 export type { SpiderServices } from "./core/SpiderServices";
 export { SpiderBuilder } from "./core/SpiderBuilder";
 
