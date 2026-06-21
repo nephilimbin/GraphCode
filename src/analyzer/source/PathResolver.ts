@@ -7,7 +7,7 @@ import {
   isRelativePath,
   isSubpathImport,
 } from "../utils/pathPredicates";
-import { resolveWithExtensions } from "./pathFs";
+import { resolveWithExtensions } from "./fileResolve";
 import { TsConfigResolver } from "./TsConfigResolver";
 import { PackageJsonResolver } from "./PackageJsonResolver";
 import { WorkspaceResolver } from "./WorkspaceResolver";

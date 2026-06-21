@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { normalizePath } from "../foundation/types";
-import { fileExists, resolveWithExtensions, shouldStopSearch } from "./pathFs";
+import { fileExists, resolveWithExtensions, shouldStopSearch } from "./fileResolve";
 
 /**
  * Workspace / monorepo package resolution.

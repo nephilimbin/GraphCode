@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import { normalizePath } from "../foundation/types";
-import { fileExists } from "./pathFs";
+import { fileExists } from "./fileResolve";
 
 /**
  * Rust module-specifier resolution.

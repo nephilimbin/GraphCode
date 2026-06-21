@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { normalizePath } from "../foundation/types";
-import { fileExists, shouldStopSearch } from "./pathFs";
+import { fileExists, shouldStopSearch } from "./fileResolve";
 
 /**
  * package.json `imports` / `aliases` field resolution.

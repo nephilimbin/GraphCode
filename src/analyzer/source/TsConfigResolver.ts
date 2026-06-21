@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { normalizePath } from "../foundation/types";
 import { isPackageJsonAliasCandidate } from "../utils/pathPredicates";
-import { fileExists, shouldStopSearch } from "./pathFs";
+import { fileExists, shouldStopSearch } from "./fileResolve";
 
 /**
  * TypeScript `tsconfig.json` path-alias resolution.

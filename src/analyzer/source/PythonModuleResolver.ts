@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import { normalizePath } from "../foundation/types";
 import { isPythonFile, isPythonRelativeImport } from "../utils/pathPredicates";
-import { fileExists } from "./pathFs";
+import { fileExists } from "./fileResolve";
 
 /**
  * Python-specific module-specifier resolution.
