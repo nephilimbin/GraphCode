@@ -1,172 +1,21 @@
-import { Node, Parser } from "web-tree-sitter";
-import { normalizePath } from '../foundation/path';
-import { FileReader } from '../source/FileReader';
-import { ISymbolAnalyzer, SpiderError, SymbolDependency, SymbolInfo } from '../foundation/types';
-import { WasmParserFactory } from './WasmParserFactory';
-import { resolveWasmFile } from '../foundation/wasmResolver';
+import { Node } from "web-tree-sitter";
+import { SymbolDependency, SymbolInfo } from '../foundation/types';
+import { WasmBaseSymbolAnalyzer } from './WasmBaseSymbolAnalyzer';
 
 /**
  * Swift symbol analyzer backed by tree-sitter WASM.
- * Requires `extensionPath` to locate `dist/wasm`.
+ * 公共流程(WASM 初始化 / 解析 / 符号抽取骨架)由 WasmBaseSymbolAnalyzer 提供,
+ * 本类只实现 Swift 特有:符号声明节点识别、import 语法、调用/类型/作用域规则。
  * In unit tests, mock `WasmParserFactory` directly to avoid WASM initialization.
  */
-export class SwiftSymbolAnalyzer implements ISymbolAnalyzer {
-  private parser: Parser | null = null;
-  private readonly fileReader: FileReader;
-  private initPromise: Promise<void> | null = null;
-  private readonly extensionPath?: string;
+export class SwiftSymbolAnalyzer extends WasmBaseSymbolAnalyzer {
+  protected readonly languageConfig = {
+    parserLanguage: "swift",
+    wasmFileName: "tree-sitter-swift.wasm",
+    label: "Swift",
+  } as const;
 
-  constructor(rootDirOrExtensionPath?: string, extensionPath?: string) {
-    // Backward compatibility:
-    // Historically some call sites passed only extensionPath as first argument.
-    this.extensionPath = extensionPath ?? rootDirOrExtensionPath;
-    this.fileReader = new FileReader();
-  }
-
-  /** Lazily initializes the WASM parser and reuses a single init promise. */
-  async ensureInitialized(): Promise<void> {
-    // If parser is already initialized, return immediately
-    if (this.parser) {
-      return;
-    }
-
-    // Start initialization if not already in progress
-    this.initPromise ??= (async () => {
-      try {
-        const factory = WasmParserFactory.getInstance();
-
-        // Core + language WASM auto-located via wasmResolver (extensionPath optional)
-        const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.extensionPath);
-        await factory.init(treeSitterWasmPath);
-
-        const swiftWasmPath = resolveWasmFile("tree-sitter-swift.wasm", this.extensionPath);
-        this.parser = await factory.getParser("swift", swiftWasmPath);
-      } catch (error) {
-        // Clear the promise so retry is possible
-        this.initPromise = null;
-
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(
-          `Failed to initialize Swift WASM parser for symbol analysis: ${errorMessage}`,
-          { cause: error }
-        );
-      }
-    })();
-
-    await this.initPromise;
-  }
-  /**
-   * Analyze a Swift file and extract symbols
-   */
-  async analyzeFile(filePath: string): Promise<Map<string, SymbolInfo>> {
-    try {
-      // Ensure WASM parser is initialized
-      await this.ensureInitialized();
-
-      const content = await this.fileReader.readFile(filePath);
-      return this.analyzeFileFromContent(filePath, content);
-    } catch (error) {
-      throw SpiderError.fromError(error, filePath);
-    }
-  }
-
-  /**
-   * Synchronously analyze Swift content and extract symbols
-   * Used by AstWorker when content is already loaded
-   * NOTE: Parser must be initialized before calling this method (call ensureInitialized() first)
-   */
-  analyzeFileFromContent(filePath: string, content: string): Map<string, SymbolInfo> {
-    if (!this.parser) {
-      throw new Error(
-        "Parser not initialized. Call ensureInitialized() before using analyzeFileFromContent()."
-      );
-    }
-
-    const tree = this.parser.parse(content);
-    if (!tree) {
-      throw new Error(`Failed to parse Swift file: ${filePath}`);
-    }
-    const symbols = new Map<string, SymbolInfo>();
-    const normalizedPath = normalizePath(filePath);
-
-    this.extractSymbols(tree.rootNode, normalizedPath, content, symbols);
-
-    return symbols;
-  }
-
-  /**
-   * Synchronously analyze Swift content and extract both symbols and dependencies
-   * Used by AstWorker when content is already loaded
-   * NOTE: Parser must be initialized before calling this method (call ensureInitialized() first)
-   * @returns Object with symbols and dependencies arrays
-   */
-  analyzeFileContent(filePath: string, content: string): {
-    symbols: SymbolInfo[];
-    dependencies: SymbolDependency[];
-  } {
-    if (!this.parser) {
-      throw new Error(
-        "Parser not initialized. Call ensureInitialized() before using analyzeFileContent()."
-      );
-    }
-
-    const tree = this.parser.parse(content);
-    if (!tree) {
-      throw new Error(`Failed to parse Swift file: ${filePath}`);
-    }
-    const symbolMap = new Map<string, SymbolInfo>();
-    const dependencies: SymbolDependency[] = [];
-    const normalizedPath = normalizePath(filePath);
-
-    // First pass: collect all symbols
-    this.extractSymbols(tree.rootNode, normalizedPath, content, symbolMap);
-
-    // Build import map: localName -> moduleSpecifier (for tracking external dependencies)
-    const importMap = this.buildImportMap(tree.rootNode, content);
-
-    // Second pass: extract dependencies (both internal and external)
-    this.extractDependencies(tree.rootNode, normalizedPath, content, dependencies, symbolMap, undefined, importMap);
-
-    return {
-      symbols: Array.from(symbolMap.values()),
-      dependencies,
-    };
-  }
-
-  /**
-   * Get symbol-level dependencies for a Swift file
-   */
-  async getSymbolDependencies(filePath: string): Promise<SymbolDependency[]> {
-    try {
-      // Ensure WASM parser is initialized
-      await this.ensureInitialized();
-
-      const content = await this.fileReader.readFile(filePath);
-      const result = this.analyzeFileContent(filePath, content);
-      return result.dependencies;
-    } catch (error) {
-      throw SpiderError.fromError(error, filePath);
-    }
-  }
-
-  /**
-   * Extract symbols from AST
-   */
-  private extractSymbols(
-    node: Node,
-    filePath: string,
-    content: string,
-    symbols: Map<string, SymbolInfo>,
-    parentSymbolId?: string
-  ): void {
-    if (this.tryExtractSymbolFromNode(node, filePath, content, symbols, parentSymbolId)) {
-      return;
-    }
-
-    this.extractSymbolsFromChildren(node, filePath, content, symbols, parentSymbolId);
-  }
-
-  private tryExtractSymbolFromNode(
+  protected tryExtractSymbolFromNode(
     node: Node,
     filePath: string,
     content: string,
@@ -347,23 +196,11 @@ export class SwiftSymbolAnalyzer implements ISymbolAnalyzer {
     this.extractSymbolsFromChildren(node, filePath, content, symbols, symbolId);
   }
 
-  private extractSymbolsFromChildren(
-    node: Node,
-    filePath: string,
-    content: string,
-    symbols: Map<string, SymbolInfo>,
-    parentSymbolId?: string
-  ): void {
-    for (const child of node.children) {
-      this.extractSymbols(child, filePath, content, symbols, parentSymbolId);
-    }
-  }
-
   /**
    * Build a map of imported names to their module specifiers
    * e.g., Foundation -> Foundation, UIKit -> UIKit
    */
-  private buildImportMap(node: Node, content: string): Map<string, string> {
+  protected buildImportMap(node: Node, content: string): Map<string, string> {
     const importMap = new Map<string, string>();
     this.traverseForImports(node, importMap, content);
     return importMap;
@@ -405,7 +242,7 @@ export class SwiftSymbolAnalyzer implements ISymbolAnalyzer {
   /**
    * Extract symbol dependencies from AST
    */
-  private extractDependencies(
+  protected extractDependencies(
     node: Node,
     filePath: string,
     content: string,
@@ -631,12 +468,5 @@ export class SwiftSymbolAnalyzer implements ISymbolAnalyzer {
       }
     }
     return null;
-  }
-
-  /**
-   * Get text content of a node
-   */
-  private getNodeText(node: Node, content: string): string {
-    return content.slice(node.startIndex, node.endIndex);
   }
 }

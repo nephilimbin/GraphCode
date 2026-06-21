@@ -1,172 +1,21 @@
-import { Node, Parser } from "web-tree-sitter";
-import { normalizePath } from '../foundation/path';
-import { FileReader } from '../source/FileReader';
-import { ISymbolAnalyzer, SpiderError, SymbolDependency, SymbolInfo } from '../foundation/types';
-import { WasmParserFactory } from './WasmParserFactory';
-import { resolveWasmFile } from '../foundation/wasmResolver';
+import { Node } from "web-tree-sitter";
+import { SymbolDependency, SymbolInfo } from '../foundation/types';
+import { WasmBaseSymbolAnalyzer } from './WasmBaseSymbolAnalyzer';
 
 /**
  * Rust symbol analyzer backed by tree-sitter WASM.
- * Requires `extensionPath` to locate `dist/wasm`.
+ * 公共流程(WASM 初始化 / 解析 / 符号抽取骨架)由 WasmBaseSymbolAnalyzer 提供,
+ * 本类只实现 Rust 特有:符号声明节点识别、use/mod import 语法、调用/作用域规则。
  * In unit tests, mock `WasmParserFactory` directly to avoid WASM initialization.
  */
-export class RustSymbolAnalyzer implements ISymbolAnalyzer {
-  private parser: Parser | null = null;
-  private readonly fileReader: FileReader;
-  private initPromise: Promise<void> | null = null;
-  private readonly extensionPath?: string;
+export class RustSymbolAnalyzer extends WasmBaseSymbolAnalyzer {
+  protected readonly languageConfig = {
+    parserLanguage: "rust",
+    wasmFileName: "tree-sitter-rust.wasm",
+    label: "Rust",
+  } as const;
 
-  constructor(rootDirOrExtensionPath?: string, extensionPath?: string) {
-    // Backward compatibility:
-    // Historically some call sites passed only extensionPath as first argument.
-    this.extensionPath = extensionPath ?? rootDirOrExtensionPath;
-    this.fileReader = new FileReader();
-  }
-
-  /** Lazily initializes the WASM parser and reuses a single init promise. */
-  async ensureInitialized(): Promise<void> {
-    // If parser is already initialized, return immediately
-    if (this.parser) {
-      return;
-    }
-
-    // Start initialization if not already in progress
-    this.initPromise ??= (async () => {
-      try {
-        const factory = WasmParserFactory.getInstance();
-
-        // Core + language WASM auto-located via wasmResolver (extensionPath optional)
-        const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.extensionPath);
-        await factory.init(treeSitterWasmPath);
-
-        const rustWasmPath = resolveWasmFile("tree-sitter-rust.wasm", this.extensionPath);
-        this.parser = await factory.getParser("rust", rustWasmPath);
-      } catch (error) {
-        // Clear the promise so retry is possible
-        this.initPromise = null;
-        
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(
-          `Failed to initialize Rust WASM parser for symbol analysis: ${errorMessage}`,
-          { cause: error }
-        );
-      }
-    })();
-
-    await this.initPromise;
-  }
-  /**
-   * Analyze a Rust file and extract symbols
-   */
-  async analyzeFile(filePath: string): Promise<Map<string, SymbolInfo>> {
-    try {
-      // Ensure WASM parser is initialized
-      await this.ensureInitialized();
-      
-      const content = await this.fileReader.readFile(filePath);
-      return this.analyzeFileFromContent(filePath, content);
-    } catch (error) {
-      throw SpiderError.fromError(error, filePath);
-    }
-  }
-
-  /**
-   * Synchronously analyze Rust content and extract symbols
-   * Used by AstWorker when content is already loaded
-   * NOTE: Parser must be initialized before calling this method (call ensureInitialized() first)
-   */
-  analyzeFileFromContent(filePath: string, content: string): Map<string, SymbolInfo> {
-    if (!this.parser) {
-      throw new Error(
-        "Parser not initialized. Call ensureInitialized() before using analyzeFileFromContent()."
-      );
-    }
-    
-    const tree = this.parser.parse(content);
-    if (!tree) {
-      throw new Error(`Failed to parse Rust file: ${filePath}`);
-    }
-    const symbols = new Map<string, SymbolInfo>();
-    const normalizedPath = normalizePath(filePath);
-
-    this.extractSymbols(tree.rootNode, normalizedPath, content, symbols);
-
-    return symbols;
-  }
-
-  /**
-   * Synchronously analyze Rust content and extract both symbols and dependencies
-   * Used by AstWorker when content is already loaded
-   * NOTE: Parser must be initialized before calling this method (call ensureInitialized() first)
-   * @returns Object with symbols and dependencies arrays
-   */
-  analyzeFileContent(filePath: string, content: string): {
-    symbols: SymbolInfo[];
-    dependencies: SymbolDependency[];
-  } {
-    if (!this.parser) {
-      throw new Error(
-        "Parser not initialized. Call ensureInitialized() before using analyzeFileContent()."
-      );
-    }
-    
-    const tree = this.parser.parse(content);
-    if (!tree) {
-      throw new Error(`Failed to parse Rust file: ${filePath}`);
-    }
-    const symbolMap = new Map<string, SymbolInfo>();
-    const dependencies: SymbolDependency[] = [];
-    const normalizedPath = normalizePath(filePath);
-
-    // First pass: collect all symbols
-    this.extractSymbols(tree.rootNode, normalizedPath, content, symbolMap);
-
-    // Build import map: localName -> moduleSpecifier (for tracking external dependencies)
-    const importMap = this.buildImportMap(tree.rootNode, content);
-
-    // Second pass: extract dependencies (both internal and external)
-    this.extractDependencies(tree.rootNode, normalizedPath, content, dependencies, symbolMap, undefined, importMap);
-
-    return {
-      symbols: Array.from(symbolMap.values()),
-      dependencies,
-    };
-  }
-
-  /**
-   * Get symbol-level dependencies for a Rust file
-   */
-  async getSymbolDependencies(filePath: string): Promise<SymbolDependency[]> {
-    try {
-      // Ensure WASM parser is initialized
-      await this.ensureInitialized();
-      
-      const content = await this.fileReader.readFile(filePath);
-      const result = this.analyzeFileContent(filePath, content);
-      return result.dependencies;
-    } catch (error) {
-      throw SpiderError.fromError(error, filePath);
-    }
-  }
-
-  /**
-   * Extract symbols from AST
-   */
-  private extractSymbols(
-    node: Node,
-    filePath: string,
-    content: string,
-    symbols: Map<string, SymbolInfo>,
-    parentSymbolId?: string
-  ): void {
-    if (this.tryExtractSymbolFromNode(node, filePath, content, symbols, parentSymbolId)) {
-      return;
-    }
-
-    this.extractSymbolsFromChildren(node, filePath, content, symbols, parentSymbolId);
-  }
-
-  private tryExtractSymbolFromNode(
+  protected tryExtractSymbolFromNode(
     node: Node,
     filePath: string,
     content: string,
@@ -329,23 +178,11 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
     this.extractSymbolsFromChildren(node, filePath, content, symbols, parentSymbolId);
   }
 
-  private extractSymbolsFromChildren(
-    node: Node,
-    filePath: string,
-    content: string,
-    symbols: Map<string, SymbolInfo>,
-    parentSymbolId?: string
-  ): void {
-    for (const child of node.children) {
-      this.extractSymbols(child, filePath, content, symbols, parentSymbolId);
-    }
-  }
-
   /**
    * Build a map of imported names to their module specifiers
    * e.g., HashMap -> std::collections::HashMap
    */
-  private buildImportMap(node: Node, content: string): Map<string, string> {
+  protected buildImportMap(node: Node, content: string): Map<string, string> {
     const importMap = new Map<string, string>();
 
     const traverse = (n: Node) => {
@@ -507,7 +344,7 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
   /**
    * Extract symbol dependencies from AST
    */
-  private extractDependencies(
+  protected extractDependencies(
     node: Node,
     filePath: string,
     content: string,
@@ -564,7 +401,7 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
     // For Rust, we need to handle qualified calls like module::function()
     // Extract both the module prefix and the function name
     const { moduleName, symbolName } = this.extractModuleAndSymbolName(funcNode, content);
-    
+
     // Check if it's a call to a local symbol (same file)
     const localTargetSymbolId = `${filePath}:${symbolName}`;
     if (symbols.has(localTargetSymbolId)) {
@@ -580,8 +417,8 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
     // Check if it's a call to an imported symbol (external file)
     // For qualified calls like helper::format_data, check if module is imported
     if (moduleName && importMap?.has(moduleName)) {
-        const moduleSpecifier = importMap.get(moduleName);
-        if (moduleSpecifier === undefined) return;
+      const moduleSpecifier = importMap.get(moduleName);
+      if (moduleSpecifier === undefined) return;
       // Create dependency with module specifier as targetFilePath
       // This will be resolved to absolute path by SpiderSymbolService.getSymbolGraph()
       dependencies.push({
@@ -632,19 +469,19 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
     if (funcNode.type === 'scoped_identifier') {
       const fullPath = this.getNodeText(funcNode, content);
       const parts = fullPath.split('::');
-      
+
       if (parts.length >= 2) {
         // For helper::format_data, moduleName='helper', symbolName='format_data'
         // For std::collections::HashMap, moduleName='std::collections', symbolName='HashMap'
         const symbolName = parts.at(-1) ?? '';
         const moduleName = parts.slice(0, -1).join('::');
-        
+
         return {
           moduleName,
           symbolName,
         };
       }
-      
+
       return {
         moduleName: undefined,
         symbolName: parts[0],
@@ -666,14 +503,14 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
     if (visNode) {
       return true; // In Rust, if visibility_modifier exists, it's 'pub'
     }
-    
+
     // Also check direct children for 'visibility_modifier' node type
     for (const child of node.children) {
       if (child.type === 'visibility_modifier') {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -708,7 +545,7 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
    */
   private findAllByType(node: Node, type: string): Node[] {
     const results: Node[] = [];
-    
+
     const traverse = (n: Node) => {
       if (n.type === type) {
         results.push(n);
@@ -717,15 +554,8 @@ export class RustSymbolAnalyzer implements ISymbolAnalyzer {
         traverse(child);
       }
     };
-    
+
     traverse(node);
     return results;
-  }
-
-  /**
-   * Get text content of a node
-   */
-  private getNodeText(node: Node, content: string): string {
-    return content.slice(node.startIndex, node.endIndex);
   }
 }
