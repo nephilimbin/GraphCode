@@ -6,7 +6,7 @@ import {
   isPythonFile,
   isRelativePath,
   isSubpathImport,
-} from "../utils/PathPredicates";
+} from "../utils/pathPredicates";
 import { resolveWithExtensions } from "./pathFs";
 import { TsConfigResolver } from "./TsConfigResolver";
 import { PackageJsonResolver } from "./PackageJsonResolver";

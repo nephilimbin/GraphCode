@@ -1,6 +1,6 @@
 import type { Dependency, SpiderConfig } from '../../foundation/types';
 import { normalizePath } from '../../foundation/types';
-import { isInIgnoredDirectory } from '../../utils/PathPredicates';
+import { isInIgnoredDirectory } from '../../utils/pathPredicates';
 import { SpiderDependencyAnalyzer } from './SpiderDependencyAnalyzer';
 import { getLogger } from "../../foundation/logger"
 

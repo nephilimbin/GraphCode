@@ -1,8 +1,8 @@
 // @vitest-environment node
 /**
- * PathPredicates 回归测试。
+ * pathPredicates 回归测试。
  *
- * PathPredicates(批次 2.6 从 PathResolver 抽出的 8 个纯谓词)原无测试。
+ * pathPredicates(批次 2.6 从 PathResolver 抽出的 8 个纯谓词)原无测试。
  * 8 个函数均为纯字符串分类(无 IO/状态),逐函数测正/负/边界。
  */
 import { describe, it, expect } from "vitest";
@@ -15,9 +15,9 @@ import {
   isPythonRelativeImport,
   isRelativePath,
   isSubpathImport,
-} from "../PathPredicates";
+} from "../pathPredicates";
 
-describe("PathPredicates", () => {
+describe("pathPredicates", () => {
   describe("isRelativePath", () => {
     it("./ 或 ../ 开头为相对路径", () => {
       expect(isRelativePath("./foo")).toBe(true);

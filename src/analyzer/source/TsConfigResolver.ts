@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { normalizePath } from "../foundation/types";
-import { isPackageJsonAliasCandidate } from "../utils/PathPredicates";
+import { isPackageJsonAliasCandidate } from "../utils/pathPredicates";
 import { fileExists, shouldStopSearch } from "./pathFs";
 
 /**
