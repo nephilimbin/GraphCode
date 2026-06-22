@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
+import { resolveRealCasePath } from "./pathUtils";
 import type { Spider } from "../../analyzer";
 import { SUPPORTED_SOURCE_FILE_REGEX } from "../../shared/constants";
 import type { VsCodeLogger } from "../extensionLogger"
@@ -149,23 +150,19 @@ export class ExtensionEventHub {
       return;
     }
 
-    const newFilePath = editor.document.fileName;
+    const newFilePath = resolveRealCasePath(editor.document.fileName);
 
     if (!SUPPORTED_SOURCE_FILE_REGEX.test(newFilePath)) {
       return;
     }
 
-    console.log('[ExtensionEventHub] handleActiveFileChanged called for:', newFilePath);
-
     // 检查是否是通过单击节点打开的文件，如果是则跳过 graph view 更新
     if (EditorNavigationService.isRecentlyOpened(newFilePath)) {
       this.log.debug("Skipping graph update for recently opened file:", newFilePath);
-      console.log('[ExtensionEventHub] SKIPPING graph update for recently opened file:', newFilePath);
       return;
     }
 
     this.log.debug("Active file changed to:", newFilePath);
-    console.log('[ExtensionEventHub] UPDATING graph for:', newFilePath);
 
     if (this.stateManager.currentSymbol) {
       await this.handleDrillDown(newFilePath, true);

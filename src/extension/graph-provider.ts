@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { Spider, type IndexerStatusSnapshot } from "../analyzer";
+import { resolveRealCasePath } from "./services/pathUtils";
 import { SUPPORTED_SOURCE_FILE_REGEX } from "../shared/constants";
 import type {
   ExtensionToWebviewMessage,
@@ -1271,7 +1272,7 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
       return;
     }
 
-    const filePath = editor.document.fileName;
+    const filePath = resolveRealCasePath(editor.document.fileName);
     log.debug(isRefresh ? "Refreshing" : "Updating", "graph for", filePath);
 
     // Only analyze supported files
