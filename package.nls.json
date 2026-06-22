@@ -6,6 +6,7 @@
   "commands.graphcode.forceReindex.title": "Force GraphCode re-index",
   "commands.graphcode.showIndexStatus.title": "Show GraphCode index status",
   "commands.graphcode.expandAllNodes.title": "Toggle Expand/Collapse All Nodes",
+  "commands.graphcode.openStorage.title": "Open Data Storage Directory",
   "commands.graphcode.refreshGraph.title": "Refresh Graph",
   "commands.graphcode.toggleViewMode.title": "Toggle View Mode (File ↔ Symbol)",
   "commands.graphcode.setViewModeFile.title": "Switch to File View",

@@ -5,6 +5,7 @@
  */
 
 import * as vscode from 'vscode';
+import * as fs from 'node:fs/promises';
 import { GraphProvider } from './extension/graph-provider';
 import { extensionLoggerManager, getExtensionLogger, watchLogLevelConfig } from './extension/extensionLogger';
 
@@ -160,6 +161,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         await graphProvider.expandAllNodes();
       } catch (error) {
         vscode.window.showErrorMessage(`Failed to expand nodes: ${error}`);
+      }
+    }),
+
+    vscode.commands.registerCommand('graphcode.openStorage', async () => {
+      try {
+        const storageUri = context.globalStorageUri;
+        // 确保目录存在(首次未写缓存时 globalStoragePath 可能不存在)
+        await fs.mkdir(storageUri.fsPath, { recursive: true });
+        await vscode.commands.executeCommand('revealFileInOS', storageUri);
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to open storage directory: ${error}`);
       }
     }),
 

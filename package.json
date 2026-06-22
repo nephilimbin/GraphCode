@@ -145,6 +145,12 @@
         "category": "GraphCode"
       },
       {
+        "command": "graphcode.openStorage",
+        "title": "%commands.graphcode.openStorage.title%",
+        "icon": "$(folder-opened)",
+        "category": "GraphCode"
+      },
+      {
         "command": "graphcode.refreshGraph",
         "title": "%commands.graphcode.refreshGraph.title%",
         "icon": "$(refresh)",
@@ -294,6 +300,11 @@
           "command": "graphcode.expandAllNodes",
           "when": "view == graphcode.graphView && graphcode.viewMode == 'file'",
           "group": "navigation@10"
+        },
+        {
+          "command": "graphcode.openStorage",
+          "when": "view == graphcode.graphView",
+          "group": "navigation@11"
         }
       ],
       "editor/context": [

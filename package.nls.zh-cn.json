@@ -6,6 +6,7 @@
   "commands.graphcode.forceReindex.title": "强制 GraphCode 重新索引",
   "commands.graphcode.showIndexStatus.title": "显示 GraphCode 索引状态",
   "commands.graphcode.expandAllNodes.title": "切换展开/折叠所有节点",
+  "commands.graphcode.openStorage.title": "打开数据存储目录",
   "commands.graphcode.refreshGraph.title": "刷新图表",
   "commands.graphcode.toggleViewMode.title": "切换视图模式（文件 ↔ 符号）",
   "commands.graphcode.setViewModeFile.title": "切换到文件视图",
