@@ -360,7 +360,7 @@ export class Spider {
     } catch {
       // Worker not started yet or error - return 0
     }
-    
+
     return {
       dependencyCache: this.cache.getStats(),
       symbolCache: this.symbolCache.getStats(),
