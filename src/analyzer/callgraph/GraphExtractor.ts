@@ -183,7 +183,14 @@ export class GraphExtractor {
     // Resolve WASM paths (auto-located via wasmResolver; extensionPath optional)
     const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.config.extensionPath);
 
-    const wasmFileName = this.langToWasmFileName(lang);
+    // .tsx needs its own grammar (tree-sitter-tsx.wasm, with JSX support); the
+    // typescript WASM lacks JSX and yields a truncated AST. The query source still
+    // reuses typescript.scm (tsx AST shares TS node types). parserLangName doubles
+    // as an isolated cache key so tsx/ts compiled Queries (bound to different
+    // language objects) don't collide.
+    const isTsx = path.extname(normalizedPath).toLowerCase() === ".tsx";
+    const parserLangName = isTsx ? "tsx" : lang;
+    const wasmFileName = isTsx ? "tree-sitter-tsx.wasm" : this.langToWasmFileName(lang);
     const langWasmPath = resolveWasmFile(wasmFileName, this.config.extensionPath);
 
     // Load query source for this language
@@ -197,7 +204,7 @@ export class GraphExtractor {
     const factory = WasmParserFactory.getInstance();
     await factory.init(treeSitterWasmPath);
 
-    const parser = await factory.getParser(lang, langWasmPath);
+    const parser = await factory.getParser(parserLangName, langWasmPath);
     const language = parser.language;
     if (!language) {
       throw new Error(`Language not loaded for ${lang}`);
@@ -210,7 +217,7 @@ export class GraphExtractor {
     }
 
     // Run query (compiled Query is cached per language — safe to reuse across files)
-    const query = this.getOrCompileQuery(language, querySrc, lang);
+    const query = this.getOrCompileQuery(language, querySrc, parserLangName);
     const captures = query.captures(tree.rootNode);
 
     return this.processCaptures(captures, normalizedPath, lang, source);
@@ -224,8 +231,8 @@ export class GraphExtractor {
    * Return a cached compiled Query for the given language, compiling on first use.
    * The Query object is safe to reuse across multiple tree parses — `.captures()` is stateless.
    */
-  private getOrCompileQuery(language: ConstructorParameters<typeof Query>[0], querySrc: string, lang: SupportedLang): Query {
-    const key = this.normalizeQueryLang(lang);
+  private getOrCompileQuery(language: ConstructorParameters<typeof Query>[0], querySrc: string, cacheKey: string): Query {
+    const key = this.normalizeQueryLang(cacheKey);
     const cached = this.compiledQueryCache.get(key);
     if (cached) return cached;
 
@@ -234,7 +241,7 @@ export class GraphExtractor {
       query = new Query(language, querySrc);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Failed to parse Tree-sitter query for ${lang}: ${msg}`, { cause: err });
+      throw new Error(`Failed to parse Tree-sitter query for ${cacheKey}: ${msg}`, { cause: err });
     }
     this.compiledQueryCache.set(key, query);
     return query;
@@ -447,7 +454,7 @@ export class GraphExtractor {
    * Map SupportedLang to the .scm file base name.
    * JavaScript reuses the typescript query file.
    */
-  private normalizeQueryLang(lang: SupportedLang): string {
+  private normalizeQueryLang(lang: string): string {
     if (lang === "javascript") return "typescript";
     return lang;
   }
