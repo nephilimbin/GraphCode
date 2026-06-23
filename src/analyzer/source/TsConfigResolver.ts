@@ -1,8 +1,21 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { normalizePath } from "../foundation/types";
+import { getLogger } from "../foundation/logger";
+import { parseJsonc } from "../utils/parseJsonc";
 import { isPackageJsonAliasCandidate } from "../utils/pathPredicates";
 import { fileExists, shouldStopSearch } from "./fileResolve";
+
+const log = getLogger("TsConfigResolver");
+
+/** Minimal structural type for the tsconfig fields we read (extends / baseUrl / paths). */
+type TsConfigJson = {
+  extends?: string;
+  compilerOptions?: {
+    baseUrl?: string;
+    paths?: Record<string, string[]>;
+  };
+};
 
 /**
  * TypeScript `tsconfig.json` path-alias resolution.
@@ -57,7 +70,7 @@ export class TsConfigResolver {
   private async loadTsConfig(tsConfigPath: string): Promise<void> {
     try {
       const content = await fs.readFile(tsConfigPath, "utf-8");
-      const tsConfig = JSON.parse(content);
+      const tsConfig = parseJsonc<TsConfigJson>(content);
 
       const paths = tsConfig?.compilerOptions?.paths;
       const baseUrl = tsConfig?.compilerOptions?.baseUrl || ".";
@@ -78,9 +91,11 @@ export class TsConfigResolver {
           }
         }
       }
-    } catch {
-      // Gracefully handle missing or invalid tsconfig
-      // Silent failure - tsconfig is optional
+    } catch (error) {
+      // tsconfig is optional, but a parse failure silently disables path-alias
+      // resolution (e.g. a comment-bearing tsconfig that JSON.parse rejects).
+      // Surface it so a broken alias config is debuggable instead of invisible.
+      log.warn(`Failed to parse tsconfig "${tsConfigPath}": ${String(error)}`);
     }
   }
 
@@ -245,7 +260,7 @@ export class TsConfigResolver {
 
     try {
       const content = await fs.readFile(tsConfigPath, "utf-8");
-      const tsConfig = JSON.parse(content);
+      const tsConfig = parseJsonc<TsConfigJson>(content);
       const tsConfigDir = path.dirname(tsConfigPath);
 
       // First, process "extends" to get parent aliases (they have lower priority)
@@ -287,9 +302,11 @@ export class TsConfigResolver {
           }
         }
       }
-    } catch {
-      // Gracefully handle missing or invalid tsconfig
-      // Silent failure - tsconfig is optional
+    } catch (error) {
+      // tsconfig is optional, but a parse failure silently disables path-alias
+      // resolution (e.g. a comment-bearing tsconfig that JSON.parse rejects).
+      // Surface it so a broken alias config is debuggable instead of invisible.
+      log.warn(`Failed to parse tsconfig "${tsConfigPath}": ${String(error)}`);
     }
   }
 }
