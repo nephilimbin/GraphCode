@@ -11,7 +11,6 @@ import { extensionLoggerManager, getExtensionLogger, watchLogLevelConfig } from 
 
 // Keep track of services for cleanup
 let graphProvider: GraphProvider;
-
 /**
  * Extension activation
  */
