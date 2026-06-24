@@ -183,14 +183,14 @@ export class GraphExtractor {
     // Resolve WASM paths (auto-located via wasmResolver; extensionPath optional)
     const treeSitterWasmPath = resolveWasmFile("tree-sitter.wasm", this.config.extensionPath);
 
-    // .tsx needs its own grammar (tree-sitter-tsx.wasm, with JSX support); the
-    // typescript WASM lacks JSX and yields a truncated AST. The query source still
-    // reuses typescript.scm (tsx AST shares TS node types). parserLangName doubles
-    // as an isolated cache key so tsx/ts compiled Queries (bound to different
+    // .tsx/.jsx contain JSX — the typescript WASM lacks it and yields a truncated
+    // AST. Both use tree-sitter-tsx.wasm (tsx is a superset of jsx) and reuse
+    // typescript.scm (JSX files share TS/JS node types). parserLangName doubles as
+    // an isolated cache key so jsx/tsx/ts compiled Queries (bound to different
     // language objects) don't collide.
-    const isTsx = path.extname(normalizedPath).toLowerCase() === ".tsx";
-    const parserLangName = isTsx ? "tsx" : lang;
-    const wasmFileName = isTsx ? "tree-sitter-tsx.wasm" : this.langToWasmFileName(lang);
+    const isJsx = [".tsx", ".jsx"].includes(path.extname(normalizedPath).toLowerCase());
+    const parserLangName = isJsx ? "tsx" : lang;
+    const wasmFileName = isJsx ? "tree-sitter-tsx.wasm" : this.langToWasmFileName(lang);
     const langWasmPath = resolveWasmFile(wasmFileName, this.config.extensionPath);
 
     // Load query source for this language
@@ -509,6 +509,7 @@ export function fileExtToLang(filePath: string): SupportedLang | null {
       return "javascript";
     case ".vue":
     case ".svelte":
+      // TODO SFC 仅提取 <script> 块按 TS/JS 解析(见 extractScriptFromSFC);template 内的组件关系(如 <Comp/>)需 vue/svelte 专用 grammar + scm。node_modules 暂无 tree-sitter-svelte.wasm,待有可复用 grammar/查询再支持
       return "typescript";
     case ".py":
     case ".pyi":
@@ -516,8 +517,8 @@ export function fileExtToLang(filePath: string): SupportedLang | null {
     case ".rs":
       return "rust";
     case ".cs":
-    case ".csproj":
       return "csharp";
+    // TODO .csproj 是 MSBuild XML 项目文件(非 C# 源码),走 csharp grammar 会误解析;故排除,不纳入 call graph 索引
     case ".go":
       return "go";
     case ".java":

@@ -42,4 +42,32 @@ describe("GraphExtractor — .tsx 提取", () => {
     expect(nodes.map((n: { name: string }) => n.name)).toContain("add");
     extractor.dispose();
   });
+
+  it(".jsx 含 JSX 也应正确提取(同 tsx 走 tsx grammar)", async () => {
+    const extractor = new GraphExtractor({ extensionPath: process.cwd() } as never);
+    const src = [
+      "import { render } from './render';",
+      "export function App() {",
+      "  render();",
+      "  return <div className='x'>{render()}</div>;",
+      "}",
+    ].join("\n");
+
+    const { nodes, edges } = await extractor.extractSource(
+      "/test/App.jsx",
+      "javascript",
+      src,
+    );
+
+    const names = nodes.map((n: { name: string }) => n.name);
+    // 修复前:jsx 落到无 JSX 的 typescript grammar,App 丢失、render() 调用边丢失
+    expect(names).toContain("App");
+    const callEdges = edges.filter(
+      (e: { targetId: string; typeRelation: string }) =>
+        /^@@external:render$/.test(e.targetId) && e.typeRelation === "CALLS",
+    );
+    expect(callEdges.length).toBeGreaterThan(0);
+
+    extractor.dispose();
+  });
 });
