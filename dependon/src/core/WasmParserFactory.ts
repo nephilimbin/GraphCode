@@ -1,0 +1,369 @@
+/**
+ * WasmParserFactory — dependon core.
+ *
+ * Singleton factory for the lifecycle of WASM tree-sitter parsers.
+ * - Initializes core `tree-sitter.wasm` once
+ * - Lazily loads language WASM binaries
+ * - Caches one parser instance per language
+ * - Guards concurrent init/parser creation with shared promises
+ *
+ * Real WASM execution requires the host runtime to support WASM (Node.js /
+ * Electron). In unit tests, mock `web-tree-sitter` or `WasmParserFactory`.
+ *
+ * @module dependon/core
+ */
+import fs from "node:fs/promises";
+import { Language, Parser } from "web-tree-sitter";
+
+export class WasmParserFactory {
+  private static instance: WasmParserFactory | null = null;
+  private initPromise: Promise<void> | null = null;
+  private readonly parsers: Map<string, Parser> = new Map();
+  private readonly parserPromises: Map<string, Promise<Parser>> = new Map();
+  private readonly languages: Map<string, Language> = new Map();
+  private initialized = false;
+  private readonly textEncoder = new TextEncoder();
+
+  /** Private constructor to enforce singleton pattern */
+  private constructor() {}
+
+  /** Get singleton instance of WasmParserFactory */
+  static getInstance(): WasmParserFactory {
+    WasmParserFactory.instance ??= new WasmParserFactory();
+    return WasmParserFactory.instance;
+  }
+
+  /**
+   * Initialize web-tree-sitter with the core WASM file.
+   * Must be called before creating any parsers. Safe to call multiple times —
+   * subsequent calls wait for the same initialization.
+   *
+   * @param wasmPath - Absolute path to tree-sitter.wasm file
+   * @throws Error if initialization fails or WASM file is missing/corrupted
+   */
+  async init(wasmPath: string): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
+
+    this.initPromise ??= (async () => {
+      try {
+        await Parser.init({
+          locateFile: () => wasmPath,
+        });
+        this.initialized = true;
+      } catch (error) {
+        // Clear the promise so retry is possible
+        this.initPromise = null;
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `Failed to initialize web-tree-sitter from ${wasmPath}: ${errorMessage}. ` +
+          `Ensure the WASM file exists and is not corrupted.`,
+          { cause: error }
+        );
+      }
+    })();
+
+    await this.initPromise;
+  }
+
+  /**
+   * Create or get cached parser for a language.
+   * Automatically loads the language WASM if not already loaded. Safe to call
+   * concurrently — ensures only one parser is created per language.
+   *
+   * @param languageName - Language identifier (e.g., 'python', 'rust')
+   * @param wasmPath - Absolute path to language WASM file
+   * @returns Parser instance configured for the specified language
+   * @throws Error if factory is not initialized or language loading fails
+   */
+  async getParser(languageName: string, wasmPath: string): Promise<Parser> {
+    if (!this.initialized) {
+      throw new Error(
+        "WasmParserFactory must be initialized with init() before creating parsers"
+      );
+    }
+
+    const cachedParser = this.parsers.get(languageName);
+    if (cachedParser !== undefined) {
+      return cachedParser;
+    }
+
+    const inProgressPromise = this.parserPromises.get(languageName);
+    if (inProgressPromise !== undefined) {
+      return inProgressPromise;
+    }
+
+    const parserPromise = (async () => {
+      try {
+        if (!this.languages.has(languageName)) {
+          await this.loadLanguage(languageName, wasmPath);
+        }
+
+        const parser = new Parser();
+        const language = this.languages.get(languageName);
+        if (language == null) {
+          throw new Error(`Failed to load language WASM for: ${languageName}`);
+        }
+        parser.setLanguage(language);
+
+        this.parsers.set(languageName, parser);
+
+        return parser;
+      } finally {
+        this.parserPromises.delete(languageName);
+      }
+    })();
+
+    this.parserPromises.set(languageName, parserPromise);
+
+    return parserPromise;
+  }
+
+  /**
+   * Load a language WASM file
+   *
+   * @param languageName - Language identifier for caching
+   * @param wasmPath - Absolute path to language WASM file
+   * @throws Error if language loading fails or WASM file is missing/corrupted
+   */
+  private async loadLanguage(
+    languageName: string,
+    wasmPath: string
+  ): Promise<void> {
+    try {
+      let language: Language;
+
+      try {
+        // Prefer loading bytes from disk so we can patch legacy dylink metadata when needed.
+        const wasmBinary = await fs.readFile(wasmPath);
+        const normalizedBinary = this.normalizeLegacyDylinkSection(new Uint8Array(wasmBinary));
+        language = await Language.load(normalizedBinary);
+      } catch (readOrNormalizeError) {
+        // Test suites often mock Language.load and pass synthetic paths that don't exist on disk.
+        // Fall back to path-based loading so mocked behavior stays compatible.
+        const errorMessage = readOrNormalizeError instanceof Error
+          ? readOrNormalizeError.message
+          : String(readOrNormalizeError);
+
+        if (errorMessage.includes("ENOENT") || errorMessage.includes("not found")) {
+          language = await Language.load(wasmPath);
+        } else {
+          throw readOrNormalizeError;
+        }
+      }
+
+      this.languages.set(languageName, language);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes("ENOENT") || errorMessage.includes("not found")) {
+        throw new Error(
+          `Language WASM file not found: ${wasmPath}. ` +
+          `Ensure dependon is properly installed and WASM files are in the dist directory.`,
+          { cause: error }
+        );
+      } else if (errorMessage.includes("magic") || errorMessage.includes("invalid")) {
+        throw new Error(
+          `Failed to load language WASM from ${wasmPath}: ${errorMessage}. ` +
+          `The WASM file may be corrupted.`,
+          { cause: error }
+        );
+      } else {
+        throw new Error(
+          `Failed to load language WASM from ${wasmPath}: ${errorMessage}`,
+          { cause: error }
+        );
+      }
+    }
+  }
+
+  /**
+   * Convert legacy `dylink` custom section format to modern `dylink.0`.
+   *
+   * Some prebuilt tree-sitter language binaries still ship with the legacy
+   * Emscripten `dylink` section, while web-tree-sitter@0.26+ expects `dylink.0`.
+   * This compatibility shim rewrites the first custom section when needed.
+   */
+  private normalizeLegacyDylinkSection(binary: Uint8Array): Uint8Array {
+    try {
+      if (
+        binary.length < 12 ||
+        binary[0] !== 0x00 ||
+        binary[1] !== 0x61 ||
+        binary[2] !== 0x73 ||
+        binary[3] !== 0x6d
+      ) {
+        return binary;
+      }
+
+      const firstSectionIdOffset = 8;
+      if (binary[firstSectionIdOffset] !== 0x00) {
+        return binary;
+      }
+
+      const sectionSizeLeb = this.readUnsignedLeb128(binary, firstSectionIdOffset + 1);
+      const sectionPayloadStart = sectionSizeLeb.nextOffset;
+      const sectionPayloadEnd = sectionPayloadStart + sectionSizeLeb.value;
+      if (sectionPayloadEnd > binary.length) {
+        return binary;
+      }
+
+      const sectionNameLenLeb = this.readUnsignedLeb128(binary, sectionPayloadStart);
+      const sectionNameStart = sectionNameLenLeb.nextOffset;
+      const sectionNameEnd = sectionNameStart + sectionNameLenLeb.value;
+      if (sectionNameEnd > sectionPayloadEnd) {
+        return binary;
+      }
+
+      const sectionName = Buffer.from(binary.subarray(sectionNameStart, sectionNameEnd)).toString(
+        "utf8"
+      );
+
+      if (sectionName !== "dylink") {
+        return binary;
+      }
+
+      let cursor = sectionNameEnd;
+      const memorySize = this.readUnsignedLeb128(binary, cursor);
+      cursor = memorySize.nextOffset;
+      const memoryAlign = this.readUnsignedLeb128(binary, cursor);
+      cursor = memoryAlign.nextOffset;
+      const tableSize = this.readUnsignedLeb128(binary, cursor);
+      cursor = tableSize.nextOffset;
+      const tableAlign = this.readUnsignedLeb128(binary, cursor);
+      cursor = tableAlign.nextOffset;
+      const neededDynlibsCount = this.readUnsignedLeb128(binary, cursor);
+      cursor = neededDynlibsCount.nextOffset;
+
+      const neededDynlibs: Uint8Array[] = [];
+      for (let i = 0; i < neededDynlibsCount.value; i++) {
+        const libNameLen = this.readUnsignedLeb128(binary, cursor);
+        cursor = libNameLen.nextOffset;
+        const libNameEnd = cursor + libNameLen.value;
+        if (libNameEnd > sectionPayloadEnd) {
+          return binary;
+        }
+        neededDynlibs.push(binary.subarray(cursor, libNameEnd));
+        cursor = libNameEnd;
+      }
+
+      const memoryInfoSubsectionData = this.concatUint8Arrays(
+        this.encodeUnsignedLeb128(memorySize.value),
+        this.encodeUnsignedLeb128(memoryAlign.value),
+        this.encodeUnsignedLeb128(tableSize.value),
+        this.encodeUnsignedLeb128(tableAlign.value)
+      );
+
+      const neededSubsectionData = this.concatUint8Arrays(
+        this.encodeUnsignedLeb128(neededDynlibs.length),
+        ...neededDynlibs.flatMap((lib) => [this.encodeUnsignedLeb128(lib.length), lib])
+      );
+
+      const DYNAMIC_LINKING_MEM_INFO_SUBSECTION = 1;
+      const DYNAMIC_LINKING_NEEDED_SUBSECTION = 2;
+
+      const memInfoSubsection = this.concatUint8Arrays(
+        Uint8Array.of(DYNAMIC_LINKING_MEM_INFO_SUBSECTION),
+        this.encodeUnsignedLeb128(memoryInfoSubsectionData.length),
+        memoryInfoSubsectionData
+      );
+
+      const neededSubsection = this.concatUint8Arrays(
+        Uint8Array.of(DYNAMIC_LINKING_NEEDED_SUBSECTION),
+        this.encodeUnsignedLeb128(neededSubsectionData.length),
+        neededSubsectionData
+      );
+
+      const modernSectionName = this.textEncoder.encode("dylink.0");
+      const modernSectionPayload = this.concatUint8Arrays(
+        this.encodeUnsignedLeb128(modernSectionName.length),
+        modernSectionName,
+        memInfoSubsection,
+        neededSubsection
+      );
+
+      const rewrittenCustomSection = this.concatUint8Arrays(
+        Uint8Array.of(0x00),
+        this.encodeUnsignedLeb128(modernSectionPayload.length),
+        modernSectionPayload
+      );
+
+      return this.concatUint8Arrays(
+        binary.subarray(0, 8),
+        rewrittenCustomSection,
+        binary.subarray(sectionPayloadEnd)
+      );
+    } catch {
+      return binary;
+    }
+  }
+
+  private readUnsignedLeb128(
+    data: Uint8Array,
+    startOffset: number
+  ): { value: number; nextOffset: number } {
+    let value = 0;
+    let shift = 0;
+    let offset = startOffset;
+
+    while (offset < data.length) {
+      const byte = data[offset];
+      value |= (byte & 0x7f) << shift;
+      offset++;
+      if ((byte & 0x80) === 0) {
+        return { value, nextOffset: offset };
+      }
+      shift += 7;
+      if (shift > 35) {
+        throw new Error("Invalid LEB128 value");
+      }
+    }
+
+    throw new Error("Unexpected EOF while reading LEB128");
+  }
+
+  private encodeUnsignedLeb128(value: number): Uint8Array {
+    const bytes: number[] = [];
+    let remaining = value >>> 0;
+
+    do {
+      let byte = remaining & 0x7f;
+      remaining >>>= 7;
+      if (remaining !== 0) {
+        byte |= 0x80;
+      }
+      bytes.push(byte);
+    } while (remaining !== 0);
+
+    return Uint8Array.from(bytes);
+  }
+
+  private concatUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
+    const total = arrays.reduce((sum, array) => sum + array.length, 0);
+    const merged = new Uint8Array(total);
+    let offset = 0;
+
+    for (const array of arrays) {
+      merged.set(array, offset);
+      offset += array.length;
+    }
+
+    return merged;
+  }
+
+  /** Check if the factory has been initialized */
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /** Reset the factory state (primarily for testing) */
+  reset(): void {
+    this.parsers.clear();
+    this.parserPromises.clear();
+    this.languages.clear();
+    this.initialized = false;
+    this.initPromise = null;
+  }
+}

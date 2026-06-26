@@ -1,0 +1,49 @@
+{
+  "name": "dependon",
+  "version": "0.1.0",
+  "description": "Standalone code analysis library — dependency graph, symbol analysis, reverse index, call graph. VS Code-agnostic, zero IDE coupling.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/api/index.js",
+  "types": "./dist/api/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/api/index.d.ts",
+      "import": "./dist/api/index.js"
+    },
+    "./workers": {
+      "import": "./dist/workers/*.js"
+    }
+  },
+  "files": [
+    "dist",
+    "queries",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "npm run build:lib && npm run build:workers && npm run copy:resources",
+    "build:lib": "tsc -p tsconfig.json",
+    "build:workers": "node esbuild.config.js",
+    "copy:resources": "node scripts/copy-resources.js",
+    "check:types": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.1",
+    "tree-sitter-wasms": "^0.1.13",
+    "ts-morph": "^27.0.2",
+    "web-tree-sitter": "^0.26.9",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@types/sql.js": "^1.4.11",
+    "esbuild": "^0.27.7",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}
