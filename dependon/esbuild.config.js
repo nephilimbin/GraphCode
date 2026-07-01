@@ -31,7 +31,7 @@ for (const w of workers) {
     target: 'node22',
     outfile: path.join(root, w.out),
     sourcemap: true,
-    external: [],
+    external: ['web-tree-sitter'], // MUST stay external: bundling web-tree-sitter breaks its WASM loading (parser.parse returns null). Matches the main project's worker bundle.
     logLevel: 'info',
   });
 }
