@@ -83,6 +83,17 @@ export interface ToggleFileLineCountsCommand {
   command: "toggleFileLineCounts";
 }
 
+// toggle 状态同步/恢复（extension → webview）
+export interface SetShowModulePathMessage {
+  command: "setShowModulePath";
+  value: boolean;
+}
+
+// 用户点击 toggle（webview → extension），状态权威在服务层
+export interface ToggleModulePathCommand {
+  command: "toggleModulePath";
+}
+
 export interface CancelExpandNodeMessage {
   command: "cancelExpandNode";
   nodeId?: string;
@@ -251,7 +262,8 @@ export type ExtensionToWebviewMessage =
   | ShowCallGraphMessage
   | CallGraphIndexingMessage
   | UpdateFileLineCountsMessage
-  | SetShowFileLineCountsMessage;
+  | SetShowFileLineCountsMessage
+  | SetShowModulePathMessage;
 
 export type WebviewToExtensionMessage =
   | OpenFileMessage
@@ -276,4 +288,5 @@ export type WebviewToExtensionMessage =
   | CallGraphFilterChangedCommand
   | CallGraphSymbolFocusCommand
   | CallGraphMountedCommand
-  | ToggleFileLineCountsCommand;
+  | ToggleFileLineCountsCommand
+  | ToggleModulePathCommand;

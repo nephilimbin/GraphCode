@@ -1344,7 +1344,7 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
         refreshReason,
         unusedDependencyMode: effectiveMode,
         filterUnused: filterActive,
-        showModulePath: this._configSnapshot.showReferencingPaths, // Renamed config field
+        showModulePath: this._graphState.getShowModulePath(),
         showFileLineCounts: this._graphState.getShowFileLineCounts(),
         projectRoot: workspaceRoot, // Pass project root directory
       };
@@ -1379,7 +1379,7 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
           refreshReason: "usage-analysis",
           unusedDependencyMode: effectiveMode,
           filterUnused: filterActive,
-          showModulePath: this._configSnapshot.showReferencingPaths, // Renamed config field
+          showModulePath: this._graphState.getShowModulePath(),
           showFileLineCounts: this._graphState.getShowFileLineCounts(),
           projectRoot: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath, // Pass project root directory
         };
@@ -1425,6 +1425,9 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
         break;
       case 'toggleFileLineCounts':
         await this.handleToggleFileLineCounts();
+        break;
+      case 'toggleModulePath':
+        await this.handleToggleModulePath();
         break;
       case 'refreshGraph':
         await this.refreshGraph();
@@ -1493,6 +1496,17 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
     this._graphState.setShowFileLineCounts(next);
     log.info("Toggled showFileLineCounts to", next);
     this._view?.webview.postMessage({ command: "setShowFileLineCounts", value: next });
+  }
+
+  /**
+   * Handle toggleModulePath: 翻转模块路径显示开关。
+   * 状态权威在 GraphState（服务层），翻转后回推 webview 同步，保证单一真相源。
+   */
+  private async handleToggleModulePath(): Promise<void> {
+    const next = !this._graphState.getShowModulePath();
+    this._graphState.setShowModulePath(next);
+    log.info("Toggled showModulePath to", next);
+    this._view?.webview.postMessage({ command: "setShowModulePath", value: next });
   }
 
   /**

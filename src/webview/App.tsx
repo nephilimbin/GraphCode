@@ -238,6 +238,11 @@ const App: React.FC = () => {
     vscode?.postMessage({ command: "toggleFileLineCounts" });
   }, []);
 
+  // 模块路径显示开关：点击只发命令，状态权威在 extension，由 setShowModulePath 回推
+  const handleToggleModulePath = React.useCallback(() => {
+    vscode?.postMessage({ command: "toggleModulePath" });
+  }, []);
+
   // Notify extension that webview is ready on mount
   React.useEffect(() => {
     if (vscode) {
@@ -690,6 +695,9 @@ const App: React.FC = () => {
         case "setShowFileLineCounts":
           setShowFileLineCounts(message.value);
           break;
+        case "setShowModulePath":
+          setShowModulePath(message.value);
+          break;
 
       }
     };
@@ -1011,7 +1019,8 @@ const App: React.FC = () => {
             symbolData={symbolData}
             layout={layout}
             onLayoutChange={(l) => setLayout(l)}
-            showModulePathInitial={showModulePath}
+            showModulePath={showModulePath}
+            onToggleModulePath={handleToggleModulePath}
             projectRoot={projectRoot}
             fileLineCounts={fileLineCounts}
             showFileLineCounts={showFileLineCounts}

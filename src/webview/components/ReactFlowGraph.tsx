@@ -100,8 +100,10 @@ interface ReactFlowGraphProps {
   selectedNodeId?: string | null;
   /** Callback for symbol highlight on double-click */
   onHighlight?: (symbolId: string) => void;
-  /** Initial value for showModulePath from VS Code settings */
-  showModulePathInitial?: boolean;
+  /** 模块路径显示开关（受控，状态权威在 extension） */
+  showModulePath?: boolean;
+  /** 切换模块路径显示：仅发命令，状态由 extension 回推（单一真相源） */
+  onToggleModulePath?: () => void;
   /** Project root directory for computing module paths */
   projectRoot?: string;
   /** 文件节点行数数据（独立通道，按文件路径 → 行数） */
@@ -380,7 +382,8 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
   onLayoutChange,
   layout = "hierarchical",
   selectedNodeId,
-  showModulePathInitial = false,
+  showModulePath = false,
+  onToggleModulePath,
   projectRoot,
   fileLineCounts,
   showFileLineCounts,
@@ -388,9 +391,6 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
 }) => {
   // Use backendFilterUnused directly - no local state to avoid stale closures
   const filterUnused = backendFilterUnused ?? false;
-
-  // Local state for showModulePath toggle
-  const [showModulePath, setShowModulePath] = React.useState(showModulePathInitial);
 
   const { fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
@@ -1157,10 +1157,7 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
           {/* Module OFF - 第二个 */}
           {mode === "file" && (
             <button
-              onClick={(e) => {
-                const newState = !showModulePath;
-                setShowModulePath(newState);
-              }}
+              onClick={() => onToggleModulePath?.()}
               title={showModulePath ? "Hide module paths" : "Show module paths (e.g., core.queue:redis_client.py)"}
               style={{
                 background: showModulePath

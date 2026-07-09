@@ -3,6 +3,7 @@ import type { ProviderStateManager, ViewMode } from "../state/provider-state-man
 export class GraphState {
   private reverseDependenciesVisible = false;
   private showFileLineCounts = false;
+  private showModulePath = false;
   private readonly activeExpansionControllers = new Map<string, AbortController>();
   private readonly stateManager: ProviderStateManager;
 
@@ -41,6 +42,15 @@ export class GraphState {
 
   setShowFileLineCounts(value: boolean): void {
     this.showFileLineCounts = value;
+  }
+
+  // 模块路径显示开关：纯内存状态，随 GraphState 释放（dispose 前跨视图保持）
+  getShowModulePath(): boolean {
+    return this.showModulePath;
+  }
+
+  setShowModulePath(value: boolean): void {
+    this.showModulePath = value;
   }
 
   getExpansionController(nodeId: string): AbortController | undefined {
