@@ -45,6 +45,9 @@ scripts/
 .scratch/
 docs/
 
+# dependon 是独立重构库(尚未接入扩展，src/ 不引用)，不打包进 vsix
+dependon/
+
 # 开发临时文件
 *.log
 *.tgz
