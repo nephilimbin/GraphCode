@@ -1,0 +1,17 @@
+{
+  "//": "Type context for tests/. tsconfig.json excludes tests/ from the build, so without this editors lose @types/node and node:fs/process error out.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    // parity tests cross-import the root analyzer via ../../src/analyzer; its @/ alias is foreign to dependon and the files sit outside rootDir. They run fine under vitest (which has the @ alias) — keep them out of tsc.
+    "tests/compare.test.ts",
+    "tests/compare-doya.test.ts",
+    "tests/compare-callgraph.test.ts"
+  ]
+}
