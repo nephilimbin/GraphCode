@@ -21,10 +21,7 @@ import {
 import { computeRelatedNodes, computeDirectConnections } from "../utils/graphTraversal";
 import { normalizePath } from "../utils/path";
 import { buildReactFlowGraph, GRAPH_LIMITS } from "./reactflow/buildGraph";
-import {
-  ExpansionOverlay,
-  type ExpansionState,
-} from "./reactflow/ExpansionOverlay";
+import { type ExpansionState } from "./reactflow/ExpansionOverlay";
 import { FileNode } from "./reactflow/FileNode";
 import { SymbolNode } from "./reactflow/SymbolNode";
 
@@ -104,6 +101,10 @@ interface ReactFlowGraphProps {
   showModulePath?: boolean;
   /** 切换模块路径显示：仅发命令，状态由 extension 回推（单一真相源） */
   onToggleModulePath?: () => void;
+  /** 展开节点时视角跟随（受控，状态权威在 extension，默认开启） */
+  followOnExpand?: boolean;
+  /** 切换展开视角跟随：仅发命令，状态由 extension 回推（单一真相源） */
+  onToggleFollowOnExpand?: () => void;
   /** Project root directory for computing module paths */
   projectRoot?: string;
   /** 文件节点行数数据（独立通道，按文件路径 → 行数） */
@@ -132,6 +133,7 @@ function useExpandedNodes(params: {
   edges: GraphData["edges"] | undefined;
   autoExpandNodeId: string | null | undefined;
   onExpandNode?: (path: string) => void;
+  onExpandInitiated?: (path: string) => void;
   resetToken?: number;
 }) {
   const {
@@ -140,6 +142,7 @@ function useExpandedNodes(params: {
     edges,
     autoExpandNodeId,
     onExpandNode,
+    onExpandInitiated,
     resetToken,
   } = params;
 
@@ -274,6 +277,11 @@ function useExpandedNodes(params: {
     onExpandNodeRef.current = onExpandNode;
   }, [onExpandNode]);
 
+  const onExpandInitiatedRef = React.useRef(onExpandInitiated);
+  React.useEffect(() => {
+    onExpandInitiatedRef.current = onExpandInitiated;
+  }, [onExpandInitiated]);
+
   // Request expansion of a node (always adds to expanded set)
   const handleExpandRequest = useCallback(
     (path: string) => {
@@ -281,6 +289,8 @@ function useExpandedNodes(params: {
 
       // Notify parent component first via ref
       onExpandNodeRef.current?.(normalized);
+      // Notify fitView focus handler: this node is being expanded (focus instead of fit-all)
+      onExpandInitiatedRef.current?.(normalized);
 
       // Then update local state atomically
       setExpandedNodes((prev) => {
@@ -300,18 +310,41 @@ function useAutoFitView(params: {
   containerRef: React.RefObject<HTMLDivElement | null>;
   nodesInitialized: boolean;
   nodeCount: number;
-  fitView: (options?: { padding?: number; duration?: number }) => void;
+  fitView: (options?: { padding?: number; duration?: number; nodes?: string[] }) => void;
+  getNodes: () => Array<{ id: string; position: { x: number; y: number }; measured?: { width?: number; height?: number }; hidden?: boolean }>;
+  setCenter: (x: number, y: number, options?: { zoom?: number; duration?: number }) => void;
+  getZoom: () => number;
+  pendingExpandIdRef: React.MutableRefObject<string | null>;
+  edgesRef: React.MutableRefObject<GraphData["edges"] | undefined>;
+  selectedIdRef: React.MutableRefObject<string | null | undefined>;
+  followOnExpand: boolean;
 }) {
-  const { containerRef, nodesInitialized, nodeCount, fitView } = params;
+  const { containerRef, nodesInitialized, nodeCount, fitView, getNodes, setCenter, getZoom, pendingExpandIdRef, edgesRef, selectedIdRef, followOnExpand } = params;
 
   useEffect(() => {
     if (!nodesInitialized || nodeCount === 0) return;
-    const timeoutId = setTimeout(
-      () => fitView({ padding: 0.2, duration: 500 }),
-      100,
-    );
-    return () => clearTimeout(timeoutId);
-  }, [nodesInitialized, nodeCount, fitView]);
+    const focusId = pendingExpandIdRef.current;
+    if (focusId) {
+      if (!followOnExpand) return; // 视角跟随关闭：展开时不调整视角（保持当前画面）
+      // 展开场景：setCenter 平移到「被展开节点 + 子节点」中心，保持当前 zoom（不 zoom-out）。
+      // 不用 fitView({ nodes })：本版本节点 measured 永不就绪，fitView 算不出边界（已验证）。
+      const children =
+        edgesRef.current?.filter((e) => e.source === focusId).map((e) => e.target) ?? [];
+      const focusNodes = Array.from(
+        new Set([focusId, ...children, selectedIdRef.current].filter(Boolean) as string[]),
+      );
+      const internalFocus = getNodes().filter((n) => focusNodes.includes(n.id));
+      if (internalFocus.length > 0) {
+        const xs = internalFocus.map((n) => n.position.x);
+        const ys = internalFocus.map((n) => n.position.y);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+        setCenter(cx, cy, { zoom: getZoom(), duration: 500 });
+      }
+    } else {
+      fitView({ padding: 0.2, duration: 500 });
+    }
+  }, [nodesInitialized, nodeCount, fitView, getNodes, setCenter, getZoom, pendingExpandIdRef, edgesRef, selectedIdRef, followOnExpand]);
 
   useEffect(() => {
     if (!nodesInitialized || nodeCount === 0) return;
@@ -319,7 +352,10 @@ function useAutoFitView(params: {
     if (!element) return;
 
     const scheduler = createDebouncedRafScheduler(
-      () => fitView({ padding: 0.2, duration: 200 }),
+      () => {
+        if (pendingExpandIdRef.current) return; // 展开场景：由聚焦逻辑处理，跳过 resize-fit 避免覆盖
+        fitView({ padding: 0.2, duration: 200 });
+      },
       60,
     );
 
@@ -372,8 +408,6 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
   onSwitchToListView,
   showParents = false,
   onToggleParents,
-  expansionState,
-  onCancelExpand,
   resetToken,
   unusedDependencyMode = "none",
   filterUnused: backendFilterUnused,
@@ -384,6 +418,8 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
   selectedNodeId,
   showModulePath = false,
   onToggleModulePath,
+  followOnExpand = true,
+  onToggleFollowOnExpand,
   projectRoot,
   fileLineCounts,
   showFileLineCounts,
@@ -392,7 +428,7 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
   // Use backendFilterUnused directly - no local state to avoid stale closures
   const filterUnused = backendFilterUnused ?? false;
 
-  const { fitView } = useReactFlow();
+  const { fitView, getNodes, setCenter, getZoom } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   
@@ -412,6 +448,18 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
     () => Object.freeze({ file: FileNode, symbol: SymbolNode } as const),
     [],
   );
+  // 展开聚焦：记录被展开节点，供 useAutoFitView 聚焦而非 fit 全部
+  const pendingExpandIdRef = React.useRef<string | null>(null);
+  const fitEdgesRef = React.useRef<GraphData["edges"] | undefined>(data?.edges);
+  fitEdgesRef.current = data?.edges;
+  const fitSelectedIdRef = React.useRef<string | null | undefined>(selectedNodeId);
+  fitSelectedIdRef.current = selectedNodeId;
+
+  // 导航(切换文件)或 expandAll 变化时清除展开聚焦，回到 fit 全部
+  React.useEffect(() => {
+    pendingExpandIdRef.current = null;
+  }, [currentFilePath, expandAll]);
+
   const { expandedNodes, toggleExpandedNode, handleExpandRequest } =
     useExpandedNodes({
       expandAll,
@@ -419,6 +467,9 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
       edges: data?.edges,
       autoExpandNodeId,
       onExpandNode,
+      onExpandInitiated: (path) => {
+        pendingExpandIdRef.current = path;
+      },
       resetToken,
     });
 
@@ -928,6 +979,13 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
     nodesInitialized,
     nodeCount: nodes.length,
     fitView,
+    getNodes,
+    setCenter,
+    getZoom,
+    pendingExpandIdRef,
+    edgesRef: fitEdgesRef,
+    selectedIdRef: fitSelectedIdRef,
+    followOnExpand,
   });
 
   // T081: Listen for refreshing and updateGraph messages
@@ -1046,9 +1104,6 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
           />
           <span style={{ color: 'var(--vscode-foreground)' }}>Updating...</span>
         </div>
-      )}
-      {expansionState && (
-        <ExpansionOverlay state={expansionState} onCancel={onCancelExpand} />
       )}
       {isTruncated && (
         <div
@@ -1179,6 +1234,34 @@ const ReactFlowGraphContent: React.FC<ReactFlowGraphProps> = ({
               }}
             >
               {showModulePath ? "🔧 Module ON" : "🔧 Module OFF"}
+            </button>
+          )}
+
+          {/* Follow ON/OFF - 展开节点时视角跟随(平移到展开区域，保持 zoom，不 zoom-out) */}
+          {mode === "file" && (
+            <button
+              onClick={() => onToggleFollowOnExpand?.()}
+              title={followOnExpand ? "Disable camera follow on expand" : "Enable camera follow on expand (pan to expanded area, keep zoom)"}
+              style={{
+                background: followOnExpand
+                  ? "var(--vscode-button-background)"
+                  : "var(--vscode-button-secondaryBackground)",
+                color: followOnExpand
+                  ? "var(--vscode-button-foreground)"
+                  : "var(--vscode-button-secondaryForeground)",
+                border: "1px solid var(--vscode-button-border)",
+                borderRadius: 4,
+                padding: "6px 12px",
+                cursor: "pointer",
+                fontSize: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                pointerEvents: "auto",
+                zIndex: 1001,
+              }}
+            >
+              {followOnExpand ? "🎯 Follow ON" : "🎯 Follow OFF"}
             </button>
           )}
 

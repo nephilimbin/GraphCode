@@ -1346,6 +1346,7 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
         filterUnused: filterActive,
         showModulePath: this._graphState.getShowModulePath(),
         showFileLineCounts: this._graphState.getShowFileLineCounts(),
+        followOnExpand: this._graphState.getFollowOnExpand(),
         projectRoot: workspaceRoot, // Pass project root directory
       };
       this._view.webview.postMessage(initialMessage);
@@ -1381,6 +1382,7 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
           filterUnused: filterActive,
           showModulePath: this._graphState.getShowModulePath(),
           showFileLineCounts: this._graphState.getShowFileLineCounts(),
+          followOnExpand: this._graphState.getFollowOnExpand(),
           projectRoot: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath, // Pass project root directory
         };
 
@@ -1428,6 +1430,9 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
         break;
       case 'toggleModulePath':
         await this.handleToggleModulePath();
+        break;
+      case 'toggleFollowOnExpand':
+        await this.handleToggleFollowOnExpand();
         break;
       case 'refreshGraph':
         await this.refreshGraph();
@@ -1507,6 +1512,17 @@ export class GraphProvider implements vscode.WebviewViewProvider, vscode.Disposa
     this._graphState.setShowModulePath(next);
     log.info("Toggled showModulePath to", next);
     this._view?.webview.postMessage({ command: "setShowModulePath", value: next });
+  }
+
+  /**
+   * Handle toggleFollowOnExpand: 翻转展开时视角跟随开关。
+   * 状态权威在 GraphState（服务层），翻转后回推 webview 同步，保证单一真相源。
+   */
+  private async handleToggleFollowOnExpand(): Promise<void> {
+    const next = !this._graphState.getFollowOnExpand();
+    this._graphState.setFollowOnExpand(next);
+    log.info("Toggled followOnExpand to", next);
+    this._view?.webview.postMessage({ command: "setFollowOnExpand", value: next });
   }
 
   /**

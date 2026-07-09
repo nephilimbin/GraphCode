@@ -213,6 +213,7 @@ const App: React.FC = () => {
   >("none");
   const [filterUnused, setFilterUnused] = React.useState<boolean>(false);
   const [showModulePath, setShowModulePath] = React.useState<boolean>(false);
+  const [followOnExpand, setFollowOnExpand] = React.useState<boolean>(true);
   const [showFileLineCounts, setShowFileLineCounts] = React.useState<boolean>(false);
   const [fileLineCounts, setFileLineCounts] = React.useState<Record<string, number>>({});
   const [projectRoot, setProjectRoot] = React.useState<string>("");
@@ -241,6 +242,11 @@ const App: React.FC = () => {
   // 模块路径显示开关：点击只发命令，状态权威在 extension，由 setShowModulePath 回推
   const handleToggleModulePath = React.useCallback(() => {
     vscode?.postMessage({ command: "toggleModulePath" });
+  }, []);
+
+  // 展开视角跟随开关：点击只发命令，状态权威在 extension，由 setFollowOnExpand 回推
+  const handleToggleFollowOnExpand = React.useCallback(() => {
+    vscode?.postMessage({ command: "toggleFollowOnExpand" });
   }, []);
 
   // Notify extension that webview is ready on mount
@@ -383,6 +389,9 @@ const App: React.FC = () => {
           message.showModulePath,
         );
         setShowModulePath(message.showModulePath);
+      }
+      if (message.followOnExpand !== undefined) {
+        setFollowOnExpand(message.followOnExpand);
       }
       if (message.projectRoot !== undefined) {
         log.debug(
@@ -613,11 +622,9 @@ const App: React.FC = () => {
       message: message.message,
     });
 
+    // 终态(completed/cancelled/error)立即清除，不再显示 1.5s「完成」提示(避免每次展开弹窗打扰)
     if (["completed", "cancelled", "error"].includes(message.status)) {
-      clearExpansionTimeoutRef.current = setTimeout(() => {
-        setExpansionState(null);
-        clearExpansionTimeoutRef.current = null;
-      }, 1500);
+      setExpansionState(null);
     }
   }, []);
 
@@ -697,6 +704,9 @@ const App: React.FC = () => {
           break;
         case "setShowModulePath":
           setShowModulePath(message.value);
+          break;
+        case "setFollowOnExpand":
+          setFollowOnExpand(message.value);
           break;
 
       }
@@ -1021,6 +1031,8 @@ const App: React.FC = () => {
             onLayoutChange={(l) => setLayout(l)}
             showModulePath={showModulePath}
             onToggleModulePath={handleToggleModulePath}
+            followOnExpand={followOnExpand}
+            onToggleFollowOnExpand={handleToggleFollowOnExpand}
             projectRoot={projectRoot}
             fileLineCounts={fileLineCounts}
             showFileLineCounts={showFileLineCounts}

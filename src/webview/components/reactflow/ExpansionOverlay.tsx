@@ -39,7 +39,7 @@ export const ExpansionOverlay: React.FC<{
     <div
       style={{
         position: 'absolute',
-        top: 12,
+        bottom: 12,
         right: 12,
         zIndex: 20,
         display: 'flex',

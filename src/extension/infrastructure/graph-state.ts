@@ -4,6 +4,7 @@ export class GraphState {
   private reverseDependenciesVisible = false;
   private showFileLineCounts = false;
   private showModulePath = false;
+  private followOnExpand = true;
   private readonly activeExpansionControllers = new Map<string, AbortController>();
   private readonly stateManager: ProviderStateManager;
 
@@ -51,6 +52,15 @@ export class GraphState {
 
   setShowModulePath(value: boolean): void {
     this.showModulePath = value;
+  }
+
+  // 展开时视角跟随开关：默认开启，纯内存状态，随 GraphState 释放（dispose 前跨视图保持）
+  getFollowOnExpand(): boolean {
+    return this.followOnExpand;
+  }
+
+  setFollowOnExpand(value: boolean): void {
+    this.followOnExpand = value;
   }
 
   getExpansionController(nodeId: string): AbortController | undefined {

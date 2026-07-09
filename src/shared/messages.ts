@@ -40,6 +40,7 @@ export interface ShowGraphMessage {
   filterUnused?: boolean;
   showModulePath?: boolean; // Show module paths (e.g., core.queue:redis_client.py)
   showFileLineCounts?: boolean; // 在文件名后显示文件总行数（如 app.py:800）
+  followOnExpand?: boolean; // 展开节点时视角跟随（平移到展开区域，保持 zoom 不 zoom-out）
   projectRoot?: string; // Project root directory for computing module paths
 }
 
@@ -92,6 +93,17 @@ export interface SetShowModulePathMessage {
 // 用户点击 toggle（webview → extension），状态权威在服务层
 export interface ToggleModulePathCommand {
   command: "toggleModulePath";
+}
+
+// toggle 状态同步/恢复（extension → webview）
+export interface SetFollowOnExpandMessage {
+  command: "setFollowOnExpand";
+  value: boolean;
+}
+
+// 用户点击 toggle（webview → extension），状态权威在服务层
+export interface ToggleFollowOnExpandCommand {
+  command: "toggleFollowOnExpand";
 }
 
 export interface CancelExpandNodeMessage {
@@ -263,7 +275,8 @@ export type ExtensionToWebviewMessage =
   | CallGraphIndexingMessage
   | UpdateFileLineCountsMessage
   | SetShowFileLineCountsMessage
-  | SetShowModulePathMessage;
+  | SetShowModulePathMessage
+  | SetFollowOnExpandMessage;
 
 export type WebviewToExtensionMessage =
   | OpenFileMessage
@@ -289,4 +302,5 @@ export type WebviewToExtensionMessage =
   | CallGraphSymbolFocusCommand
   | CallGraphMountedCommand
   | ToggleFileLineCountsCommand
-  | ToggleModulePathCommand;
+  | ToggleModulePathCommand
+  | ToggleFollowOnExpandCommand;
