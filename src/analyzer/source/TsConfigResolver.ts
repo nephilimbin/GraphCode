@@ -69,7 +69,19 @@ export class TsConfigResolver {
   /** Load path aliases from the constructor-supplied tsconfig.json */
   private async loadTsConfig(tsConfigPath: string): Promise<void> {
     try {
-      const content = await fs.readFile(tsConfigPath, "utf-8");
+      // 容错：tsConfigPath 可能被误传为目录(如项目根目录)。若是目录则尝试拼 tsconfig.json；
+      // 若最终不是普通文件则静默跳过(tsconfig 可选，不应抛 EISDIR 打扰日志)。
+      let resolvedPath = tsConfigPath;
+      let stats = await fs.stat(tsConfigPath).catch(() => null);
+      if (stats?.isDirectory()) {
+        resolvedPath = path.join(tsConfigPath, "tsconfig.json");
+        stats = await fs.stat(resolvedPath).catch(() => null);
+      }
+      if (!stats?.isFile()) {
+        return;
+      }
+
+      const content = await fs.readFile(resolvedPath, "utf-8");
       const tsConfig = parseJsonc<TsConfigJson>(content);
 
       const paths = tsConfig?.compilerOptions?.paths;
@@ -85,7 +97,7 @@ export class TsConfigResolver {
 
           if (target) {
             // Resolve relative to tsconfig directory
-            const tsConfigDir = path.dirname(tsConfigPath);
+            const tsConfigDir = path.dirname(resolvedPath);
             const absoluteTarget = path.resolve(tsConfigDir, baseUrl, target);
             this.pathAliases.set(cleanAlias, normalizePath(absoluteTarget));
           }
