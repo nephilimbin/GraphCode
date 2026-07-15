@@ -46,6 +46,11 @@ export class SpiderGraphCrawler {
         log.debug(`Found ${dependencies.length} dependencies for ${filePath}`);
 
         for (const dep of dependencies) {
+          // Skip self-loop edges: a bare import resolving to the same file (e.g.
+          // `import pty` inside pty.py) is resolution noise, not a cross-file
+          // cycle — yet DFS would flag it as a length-1 cycle.
+          if (dep.path === normalizedFile) continue;
+
           nodes.add(dep.path);
           const edgeId = `${normalizedFile}->${dep.path}`;
           if (!edgeIds.has(edgeId)) {
@@ -130,6 +135,9 @@ export class SpiderGraphCrawler {
     };
 
     const processDependency = (dep: Dependency, normalizedFile: string): void => {
+      // Skip self-loop edges — see crawl() for rationale.
+      if (dep.path === normalizedFile) return;
+
       const edgeId = `${normalizedFile}->${dep.path}`;
       if (!edgeIds.has(edgeId)) {
         edgeIds.add(edgeId);
