@@ -7,6 +7,9 @@ src/
 **/*.map
 dist/**/*.map
 
+# dist 下的测试构建产物(生产入口仅 dist/extension.js,见 esbuild.js)
+dist/test-extension.js
+
 # 测试
 test/
 tests/
